@@ -16,9 +16,16 @@ const ProtectedRoute = ({ children }) => {
         // Small delay to ensure localStorage is available after navigation
         await new Promise(resolve => setTimeout(resolve, 100));
         
-        // Get JWT token from localStorage
-        const token = localStorage.getItem('authToken');
+        // Get JWT token from localStorage with retry logic
+        let token = localStorage.getItem('authToken');
+        if (!token) {
+          // Wait a bit longer and try again (for race conditions)
+          await new Promise(resolve => setTimeout(resolve, 500));
+          token = localStorage.getItem('authToken');
+        }
+        
         console.log('🔑 JWT token from localStorage:', token ? 'Present' : 'Missing');
+        console.log('🔑 Token length:', token ? token.length : 0);
         
         const headers = {
           'Content-Type': 'application/json',
