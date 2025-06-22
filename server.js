@@ -14,8 +14,7 @@ app.use(cors({
     'http://localhost:3002', 
     'http://192.168.1.4:3000', 
     'http://192.168.1.4:3002',
-    // Add your Netlify domain here after deployment
-    // 'https://your-app-name.netlify.app'
+    'https://mental-health-app-027.netlify.app'
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
