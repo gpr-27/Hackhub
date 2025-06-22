@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { useNavigate } from 'react-router-dom';
 import "../styles/HealthChat.css";
-import API_BASE_URL from '../config/api';
+import { API_BASE_URL, makeAuthenticatedRequest } from '../config/api';
 
 function HealthChat() {
   const navigate = useNavigate();
@@ -115,12 +115,8 @@ function HealthChat() {
   // Check authentication status
   const checkAuth = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/check`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include'
+      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/auth/check`, {
+        method: 'GET'
       });
 
       if (!response.ok) {
@@ -141,12 +137,8 @@ function HealthChat() {
     try {
       await checkAuth();
       
-      const response = await fetch(`${API_BASE_URL}/api/chat/messages`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include'
+      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/chat/messages`, {
+        method: 'GET'
       });
 
       if (!response.ok) {
@@ -164,12 +156,8 @@ function HealthChat() {
   // Function to save a message to MongoDB
   const saveMessage = async (message, sender) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/chat/messages`, {
+      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/chat/messages`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
         body: JSON.stringify({ message, sender })
       });
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import API_BASE_URL from '../config/api';
+import { API_BASE_URL } from '../config/api';
 
 const ProtectedRoute = ({ children }) => {
   const location = useLocation();

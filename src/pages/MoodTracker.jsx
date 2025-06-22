@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/MoodTracker.css";
-import API_BASE_URL from '../config/api';
+import { API_BASE_URL, makeAuthenticatedRequest } from '../config/api';
 
 const moodOptions = [
     { value: 1, label: "Very Sad", emoji: "😢", color: "#ff4757" },
@@ -25,9 +25,8 @@ function MoodTracker() {
     useEffect(() => {
         const fetchMoodEntries = async () => {
             try {
-                const response = await fetch(`${API_BASE_URL}/api/moods`, {
-                    method: 'GET',
-                    credentials: 'include'
+                const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/moods`, {
+                    method: 'GET'
                 });
                 
                 if (!response.ok) {
@@ -56,16 +55,14 @@ function MoodTracker() {
         if (selectedMood) {
             try {
                 const now = new Date();
-                const response = await fetch(`${API_BASE_URL}/api/moods`, {
+                const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/moods`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ 
                         mood: selectedMood,
                         notes: notes.trim(),
                         date: now.toISOString().split('T')[0], // Date for grouping
                         timestamp: now.toISOString() // Full timestamp for uniqueness
-                    }),
-                    credentials: 'include'
+                    })
                 });
                 
                 if (!response.ok) {
@@ -99,14 +96,12 @@ function MoodTracker() {
         }
 
         try {
-            const response = await fetch(`${API_BASE_URL}/api/moods/${currentEntryId}`, {
+            const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/moods/${currentEntryId}`, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ 
                     mood: selectedMood,
                     notes: notes.trim()
-                }),
-                credentials: 'include'
+                })
             });
             
             if (!response.ok) {
@@ -146,9 +141,8 @@ function MoodTracker() {
         }
         
         try {
-            const response = await fetch(`${API_BASE_URL}/api/moods/${id}`, {
-                method: "DELETE",
-                credentials: 'include'
+            const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/moods/${id}`, {
+                method: "DELETE"
             });
             
             if (!response.ok) {

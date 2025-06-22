@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import API_BASE_URL from "../config/api";
+import { API_BASE_URL, makeAuthenticatedRequest } from "../config/api";
 import "./../styles/MTracker.css";
 
 function MTracker() {
@@ -22,14 +22,12 @@ function MTracker() {
     useEffect(() => {
         const fetchMedications = async () => {
             try {
-                const response = await fetch(`${API_BASE_URL}/api/medications`, {
-                    method: 'GET',
-                    credentials: 'include'
+                const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/medications`, {
+                    method: 'GET'
                 });
                 
                 if (!response.ok) {
                     if (response.status === 401) {
-                        // Not authenticated, redirect to login
                         navigate('/login');
                         return;
                     }
@@ -38,8 +36,8 @@ function MTracker() {
                 
                 const data = await response.json();
                 setMedications(data);
-                } catch (error) {
-      // Error fetching medications
+            } catch (error) {
+                console.error('Error fetching medications:', error);
             } finally {
                 setIsLoading(false);
             }
@@ -51,16 +49,14 @@ function MTracker() {
     const addMedication = async () => {
         if (medicine && time && dosage && tillDate) {
             try {
-                const response = await fetch(`${API_BASE_URL}/api/medications`, {
+                const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/medications`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ 
                         name: medicine, 
                         time, 
                         dosage, 
                         tillDate
-                    }),
-                    credentials: 'include'
+                    })
                 });
                 
                 if (!response.ok) {
@@ -76,7 +72,7 @@ function MTracker() {
                 
                 resetForm();
             } catch (error) {
-                // Error adding medication
+                console.error('Error adding medication:', error);
             }
         } else {
             // Please fill in all fields
@@ -89,16 +85,14 @@ function MTracker() {
         }
 
         try {
-            const response = await fetch(`${API_BASE_URL}/api/medications/${currentMedId}`, {
+            const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/medications/${currentMedId}`, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ 
                     name: medicine, 
                     time, 
                     dosage, 
                     tillDate
-                }),
-                credentials: 'include'
+                })
             });
             
             if (!response.ok) {
@@ -116,7 +110,7 @@ function MTracker() {
             
             resetForm();
         } catch (error) {
-            // Error updating medication
+            console.error('Error updating medication:', error);
         }
     };
 
@@ -136,27 +130,24 @@ function MTracker() {
     };
 
     const deleteMedication = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this medication?")) {
-            return;
-        }
-        
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/medications/${id}`, {
-                method: "DELETE",
-                credentials: 'include'
-            });
-            
-            if (!response.ok) {
-                if (response.status === 401) {
-                    navigate('/login');
-                    return;
+        if (window.confirm("Are you sure you want to delete this medication?")) {
+            try {
+                const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/medications/${id}`, {
+                    method: "DELETE"
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        navigate('/login');
+                        return;
+                    }
+                    throw new Error('Failed to delete medication');
                 }
-                throw new Error('Failed to delete medication');
+                
+                setMedications(medications.filter((med) => med._id !== id));
+            } catch (error) {
+                console.error('Error deleting medication:', error);
             }
-            
-            setMedications(meds => meds.filter((med) => med._id !== id));
-        } catch (error) {
-            // Error deleting medication
         }
     };
 

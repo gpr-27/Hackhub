@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import API_BASE_URL from '../config/api';
+import { API_BASE_URL } from '../config/api';
 import '../styles/Auth.css';
 
 const Login = () => {

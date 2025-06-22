@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { API_BASE_URL, makeAuthenticatedRequest } from '../config/api';
 import '../styles/ProfileSettings.css';
-import API_BASE_URL from '../config/api';
 
 const ProfileSettings = () => {
   const navigate = useNavigate();
@@ -21,39 +21,36 @@ const ProfileSettings = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetchUserProfile();
-  }, []);
-
-  const fetchUserProfile = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setUserInfo({
-          name: data.name || '',
-          email: data.email || '',
-          avatar: data.avatar || '',
-          phone: data.phone || '',
-          dateOfBirth: data.dateOfBirth || '',
-          gender: data.gender || '',
-          address: data.address || ''
+    const fetchUserProfile = async () => {
+      try {
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/auth/profile`, {
+          method: 'GET'
         });
-      } else {
+
+        if (response.ok) {
+          const userData = await response.json();
+          setUserInfo({
+            name: userData.name || '',
+            email: userData.email || '',
+            avatar: userData.avatar || '',
+            phone: userData.phone || '',
+            dateOfBirth: userData.dateOfBirth || '',
+            gender: userData.gender || '',
+            address: userData.address || ''
+          });
+        } else if (response.status === 401) {
+          navigate('/login');
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
         setError('Failed to load profile data');
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err) {
-      setError('Error loading profile');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
+
+    fetchUserProfile();
+  }, [navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -63,19 +60,19 @@ const ProfileSettings = () => {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSaveProfile = async () => {
+    if (!userInfo.name.trim() || !userInfo.email.trim()) {
+      setError('Name and email are required');
+      return;
+    }
+
     setIsSaving(true);
-    setMessage('');
     setError('');
+    setMessage('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
+      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/auth/profile`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
         body: JSON.stringify(userInfo)
       });
 
@@ -86,8 +83,9 @@ const ProfileSettings = () => {
         const errorData = await response.json();
         setError(errorData.error || 'Failed to update profile');
       }
-    } catch (err) {
-      setError('Error updating profile');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      setError('Failed to update profile');
     } finally {
       setIsSaving(false);
     }
@@ -260,7 +258,7 @@ const ProfileSettings = () => {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="profile-form">
+        <form onSubmit={handleSaveProfile} className="profile-form">
           <div className="form-grid">
             <div className="form-group">
               <label htmlFor="name">Full Name</label>

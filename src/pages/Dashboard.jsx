@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import "../styles/Dashboard.css";
 import { Link, useNavigate } from "react-router-dom";
-import API_BASE_URL from "../config/api";
+import { API_BASE_URL, makeAuthenticatedRequest } from "../config/api";
 
 const images = [
   'https://blog.apollohomecare.com/uploads/Contributions_of_Doctors_to_Patient_Care_5fe1e0dbcb.png',
@@ -41,12 +41,8 @@ function Dashboard() {
   const checkAuthAndFetchUser = useCallback(async () => {
     try {
       // First check if user is authenticated
-      const authResponse = await fetch(`${API_BASE_URL}/api/auth/check`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include'
+      const authResponse = await makeAuthenticatedRequest(`${API_BASE_URL}/api/auth/check`, {
+        method: 'GET'
       });
 
       if (!authResponse.ok) {
@@ -61,12 +57,8 @@ function Dashboard() {
       }
 
       // If authenticated, fetch user profile
-      const userResponse = await fetch(`${API_BASE_URL}/api/auth/profile`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include'
+      const userResponse = await makeAuthenticatedRequest(`${API_BASE_URL}/api/auth/profile`, {
+        method: 'GET'
       });
 
       if (userResponse.ok) {
@@ -110,12 +102,8 @@ function Dashboard() {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include'
+      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/auth/logout`, {
+        method: 'POST'
       });
 
       // Clear JWT token from localStorage
