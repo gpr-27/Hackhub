@@ -13,6 +13,9 @@ const ProtectedRoute = ({ children }) => {
       try {
         console.log('🔍 Checking auth at:', `${API_BASE_URL}/api/auth/check`);
         
+        // Small delay to ensure localStorage is available after navigation
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         // Get JWT token from localStorage
         const token = localStorage.getItem('authToken');
         console.log('🔑 JWT token from localStorage:', token ? 'Present' : 'Missing');

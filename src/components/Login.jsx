@@ -52,13 +52,14 @@ const Login = () => {
       if (responseData.token) {
         localStorage.setItem('authToken', responseData.token);
         console.log('🔑 JWT token stored in localStorage');
-      }
-      
-      console.log('🔄 Navigating to dashboard...');
-      setTimeout(() => {
+        
+        // Navigate immediately after storing token
+        console.log('🔄 Navigating to dashboard...');
         setIsLoading(false);
-        navigate('/dashboard');
-      }, 1000);
+        navigate('/dashboard', { replace: true });
+      } else {
+        throw new Error('No authentication token received');
+      }
     } catch (err) {
       setError(err.message || 'Network error. Please check your connection and try again.');
       setIsLoading(false);
