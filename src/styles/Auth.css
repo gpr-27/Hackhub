@@ -1,0 +1,214 @@
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #6e8efb, #a777e3);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-container::before {
+  content: '';
+  position: absolute;
+  width: 2000px;
+  height: 2000px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  top: -1000px;
+  right: -1000px;
+  z-index: 0;
+}
+
+.auth-container::after {
+  content: '';
+  position: absolute;
+  width: 1500px;
+  height: 1500px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  bottom: -750px;
+  left: -750px;
+  z-index: 0;
+}
+
+.auth-card {
+  position: relative;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 450px;
+  padding: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.auth-header h1 {
+  font-size: 2rem;
+  background: linear-gradient(135deg, #6e8efb, #a777e3);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 10px;
+}
+
+.auth-header p {
+  color: #666;
+  font-size: 1rem;
+}
+
+.auth-error {
+  background-color: rgba(254, 226, 226, 0.8);
+  color: #b91c1c;
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+  border-left: 4px solid #b91c1c;
+}
+
+.auth-form {
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #444;
+  font-size: 0.95rem;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid rgba(110, 142, 251, 0.3);
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: all 0.3s;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.form-group input:focus {
+  border-color: #6e8efb;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(110, 142, 251, 0.2);
+  background: white;
+}
+
+.auth-button {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #6e8efb, #a777e3);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 10px rgba(110, 142, 251, 0.3);
+}
+
+.auth-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(110, 142, 251, 0.4);
+}
+
+.auth-button:disabled {
+  background: linear-gradient(135deg, #c4d0f5, #d8c2f0);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.auth-footer {
+  text-align: center;
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(110, 142, 251, 0.2);
+}
+
+.auth-footer p {
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.auth-footer a {
+  color: #6e8efb;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.auth-footer a:hover {
+  color: #a777e3;
+  text-decoration: underline;
+}
+
+.forgot-password {
+  display: block;
+  margin-top: 15px;
+  font-size: 0.9rem;
+}
+
+.auth-message {
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  font-size: 0.95rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.auth-message.error {
+  background-color: rgba(254, 226, 226, 0.8);
+  color: #b91c1c;
+  border-left: 4px solid #b91c1c;
+}
+
+.auth-message.success {
+  background-color: rgba(209, 250, 229, 0.8);
+  color: #047857;
+  border-left: 4px solid #047857;
+}
+
+.auth-success {
+  margin-bottom: 25px;
+  background-color: rgba(209, 250, 229, 0.5);
+  padding: 20px;
+  border-radius: 10px;
+  border-left: 4px solid #047857;
+}
+
+.auth-success p {
+  margin-bottom: 10px;
+  color: #333;
+  line-height: 1.6;
+}
+
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 25px;
+  }
+  
+  .auth-header h1 {
+    font-size: 1.7rem;
+  }
+} 

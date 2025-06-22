@@ -1,6 +1,35 @@
-# Getting Started with Create React App
+# Mental Health Care Application
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is a comprehensive mental health care application built with React and Node.js, featuring AI-powered chat, mood tracking, and medication management.
+
+## Environment Setup
+
+### Prerequisites
+- Node.js and npm installed
+- MongoDB Atlas account
+- Google Gemini AI API key
+
+### Environment Variables
+Create a `.env` file in the root directory with the following variables:
+
+```bash
+# Copy .env.example to .env and fill in your values
+cp .env.example .env
+```
+
+Required environment variables:
+- `REACT_APP_GEMINI_API_KEY`: Your Google Gemini AI API key
+- `MONGODB_CONNECTION_STRING`: Your MongoDB Atlas connection string
+- `SESSION_SECRET`: A secure secret for session management
+- `NODE_ENV`: Set to 'development' or 'production'
+
+### Getting Started
+
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Set up environment variables (see above)
+4. Start the backend server: `node server.js`
+5. In a new terminal, start the React app: `npm start`
 
 ## Available Scripts
 
