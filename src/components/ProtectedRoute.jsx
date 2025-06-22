@@ -39,8 +39,11 @@ const ProtectedRoute = ({ children }) => {
         
         const data = await response.json();
         console.log('🔐 Auth check response data:', data);
+        console.log('🔐 data.isAuthenticated value:', data.isAuthenticated);
+        console.log('🔐 data.isAuthenticated type:', typeof data.isAuthenticated);
         
         setIsAuthenticated(data.isAuthenticated);
+        console.log('🔐 setIsAuthenticated called with:', data.isAuthenticated);
       } catch (error) {
         console.log('❌ Auth check failed:', error);
         setIsAuthenticated(false);
@@ -57,7 +60,11 @@ const ProtectedRoute = ({ children }) => {
     return <div className="loading">Loading...</div>;
   }
 
+  console.log('🔐 Final render - isAuthenticated:', isAuthenticated);
+  console.log('🔐 Final render - isLoading:', isLoading);
+
   if (!isAuthenticated) {
+    console.log('🔐 Redirecting to login because isAuthenticated is:', isAuthenticated);
     // Redirect to login if not authenticated, but save the location they were
     // trying to access so we can send them there after login
     return <Navigate to="/login" state={{ from: location }} replace />;
