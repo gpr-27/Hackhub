@@ -77,8 +77,8 @@ app.use(session({
   cookie: {
     maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days in milliseconds
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    secure: true, // Always true for HTTPS
+    sameSite: 'none' // Required for cross-domain cookies
   }
 }));
 
@@ -664,6 +664,9 @@ app.post('/api/login', async (req, res) => {
       name: user.name
     };
     
+    console.log('🔐 Login success - Session ID:', req.sessionID);
+    console.log('🔐 Login success - Session data:', req.session);
+    
     res.json({ 
       id: user._id,
       email: user.email, 
@@ -678,7 +681,12 @@ app.post('/api/login', async (req, res) => {
 
 // Check if user is authenticated
 app.get('/api/auth/check', (req, res) => {
+  console.log('🔍 Auth check - Session ID:', req.sessionID);
+  console.log('🔍 Auth check - Session data:', req.session);
+  console.log('🔍 Auth check - Cookies:', req.headers.cookie);
+  
   if (req.session.user) {
+    console.log('✅ User authenticated:', req.session.user);
     res.json({
       isAuthenticated: true,
       user: {
@@ -688,6 +696,7 @@ app.get('/api/auth/check', (req, res) => {
       }
     });
   } else {
+    console.log('❌ User not authenticated - no session data');
     res.json({ isAuthenticated: false });
   }
 });
