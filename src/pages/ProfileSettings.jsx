@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL, makeAuthenticatedRequest } from '../config/api';
 import '../styles/ProfileSettings.css';
 

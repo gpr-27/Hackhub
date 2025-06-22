@@ -75,3 +75,6 @@ Thumbs.db
 
 # Misc
 cookies.txt
+
+# Local Netlify folder
+.netlify
