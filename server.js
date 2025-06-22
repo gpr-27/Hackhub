@@ -734,14 +734,16 @@ app.get('/api/auth/check', (req, res) => {
     try {
       const decoded = jwt.verify(token, jwtSecret);
       console.log('✅ User authenticated via JWT:', decoded);
-      return res.json({
+      const response = {
         isAuthenticated: true,
         user: {
           id: decoded.id,
           name: decoded.name,
           email: decoded.email
         }
-      });
+      };
+      console.log('📤 Sending JWT auth response:', response);
+      return res.status(200).json(response);
     } catch (err) {
       console.log('❌ JWT verification failed:', err.message);
     }
@@ -750,17 +752,21 @@ app.get('/api/auth/check', (req, res) => {
   // Fall back to session
   if (req.session.user) {
     console.log('✅ User authenticated via session:', req.session.user);
-    res.json({
+    const response = {
       isAuthenticated: true,
       user: {
         id: req.session.user._id,
         name: req.session.user.name,
         email: req.session.user.email
       }
-    });
+    };
+    console.log('📤 Sending session auth response:', response);
+    return res.status(200).json(response);
   } else {
     console.log('❌ User not authenticated - no session or token');
-    res.json({ isAuthenticated: false });
+    const response = { isAuthenticated: false };
+    console.log('📤 Sending unauthenticated response:', response);
+    return res.status(200).json(response);
   }
 });
 
