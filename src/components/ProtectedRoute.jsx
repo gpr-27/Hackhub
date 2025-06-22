@@ -14,34 +14,45 @@ const ProtectedRoute = ({ children }) => {
         console.log('🔍 Checking auth at:', `${API_BASE_URL}/api/auth/check`);
         
         // Small delay to ensure localStorage is available after navigation
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 500));
         
         // Get JWT token from localStorage with retry logic
-        let token = localStorage.getItem('authToken');
-        if (!token) {
-          // Wait a bit longer and try again (for race conditions)
-          await new Promise(resolve => setTimeout(resolve, 500));
+        let token = null;
+        let retryCount = 0;
+        const maxRetries = 3;
+
+        while (!token && retryCount < maxRetries) {
+          retryCount++;
+          console.log(`🔑 Attempt ${retryCount}: Retrieving JWT token from localStorage`);
           token = localStorage.getItem('authToken');
+
+          if (!token) {
+            const delay = retryCount * 500; // Increase delay with each retry
+            console.log(`🔑 Token missing. Waiting ${delay}ms before retry...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
         }
-        
+
         console.log('🔑 JWT token from localStorage:', token ? 'Present' : 'Missing');
         console.log('🔑 Token length:', token ? token.length : 0);
-        
+
         const headers = {
           'Content-Type': 'application/json',
         };
-        
+
         // Add JWT token to headers if available
         if (token) {
           headers.Authorization = `Bearer ${token}`;
+          console.log('🔑 Authorization header set:', headers.Authorization);
+        } else {
+          console.log('🔑 No JWT token found, Authorization header not set.');
         }
-        
+
         const response = await fetch(`${API_BASE_URL}/api/auth/check`, {
           method: 'GET',
           headers: headers,
-          credentials: 'include', // Keep for session fallback
         });
-        
+
         console.log('🔐 Auth check response status:', response.status);
         
         const data = await response.json();
@@ -80,4 +91,4 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-export default ProtectedRoute; 
+export default ProtectedRoute;
