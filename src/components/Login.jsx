@@ -27,8 +27,8 @@ const Login = () => {
       const res = await fetch(`${API_BASE_URL}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-        credentials: 'include'
+        body: JSON.stringify({ email, password })
+        // Removed credentials: 'include' for JWT-only auth
       });
       
       console.log('📡 Login response status:', res.status);
@@ -50,17 +50,27 @@ const Login = () => {
       
       // Store JWT token in localStorage
       if (responseData.token) {
+        // Clear any existing token first
+        localStorage.removeItem('authToken');
+        
+        // Store new token
         localStorage.setItem('authToken', responseData.token);
         console.log('🔑 JWT token stored in localStorage');
+        console.log('🔑 Token preview:', responseData.token.substring(0, 20) + '...');
+        
+        // Verify token was stored
+        const storedToken = localStorage.getItem('authToken');
+        console.log('🔑 Token verification:', storedToken ? 'Successfully stored' : 'Storage failed');
         
         // Navigate immediately after storing token
         console.log('🔄 Navigating to dashboard...');
         setIsLoading(false);
         navigate('/dashboard', { replace: true });
       } else {
-        throw new Error('No authentication token received');
+        throw new Error('No authentication token received from server');
       }
     } catch (err) {
+      console.error('❌ Login error:', err);
       setError(err.message || 'Network error. Please check your connection and try again.');
       setIsLoading(false);
     }

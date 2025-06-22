@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { API_BASE_URL } from '../config/api';
+import { API_BASE_URL, makeAuthenticatedRequest } from '../config/api';
 
 const ProtectedRoute = ({ children }) => {
   const location = useLocation();
@@ -13,55 +13,38 @@ const ProtectedRoute = ({ children }) => {
       try {
         console.log('🔍 Checking auth at:', `${API_BASE_URL}/api/auth/check`);
         
-        // Small delay to ensure localStorage is available after navigation
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Get JWT token from localStorage with retry logic
-        let token = null;
-        let retryCount = 0;
-        const maxRetries = 3;
-
-        while (!token && retryCount < maxRetries) {
-          retryCount++;
-          console.log(`🔑 Attempt ${retryCount}: Retrieving JWT token from localStorage`);
-          token = localStorage.getItem('authToken');
-
-          if (!token) {
-            const delay = retryCount * 500; // Increase delay with each retry
-            console.log(`🔑 Token missing. Waiting ${delay}ms before retry...`);
-            await new Promise(resolve => setTimeout(resolve, delay));
-          }
-        }
-
+        // Check if JWT token exists in localStorage
+        const token = localStorage.getItem('authToken');
         console.log('🔑 JWT token from localStorage:', token ? 'Present' : 'Missing');
-        console.log('🔑 Token length:', token ? token.length : 0);
-
-        const headers = {
-          'Content-Type': 'application/json',
-        };
-
-        // Add JWT token to headers if available
-        if (token) {
-          headers.Authorization = `Bearer ${token}`;
-          console.log('🔑 Authorization header set:', headers.Authorization);
-        } else {
-          console.log('🔑 No JWT token found, Authorization header not set.');
+        
+        if (!token) {
+          console.log('🔑 No JWT token found - user not authenticated');
+          setIsAuthenticated(false);
+          setIsLoading(false);
+          return;
         }
 
-        const response = await fetch(`${API_BASE_URL}/api/auth/check`, {
-          method: 'GET',
-          headers: headers,
+        // Use makeAuthenticatedRequest to check auth status
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/auth/check`, {
+          method: 'GET'
         });
 
         console.log('🔐 Auth check response status:', response.status);
         
-        const data = await response.json();
-        console.log('🔐 Auth check response data:', data);
-        console.log('🔐 data.isAuthenticated value:', data.isAuthenticated);
-        console.log('🔐 data.isAuthenticated type:', typeof data.isAuthenticated);
-        
-        setIsAuthenticated(data.isAuthenticated);
-        console.log('🔐 setIsAuthenticated called with:', data.isAuthenticated);
+        if (response.ok) {
+          const data = await response.json();
+          console.log('🔐 Auth check response data:', data);
+          setIsAuthenticated(data.isAuthenticated === true);
+          console.log('🔐 setIsAuthenticated called with:', data.isAuthenticated);
+        } else {
+          console.log('❌ Auth check failed with status:', response.status);
+          if (response.status === 401) {
+            // Remove invalid token
+            localStorage.removeItem('authToken');
+            console.log('🔑 Invalid JWT token removed from localStorage');
+          }
+          setIsAuthenticated(false);
+        }
       } catch (error) {
         console.log('❌ Auth check failed:', error);
         setIsAuthenticated(false);
@@ -75,7 +58,18 @@ const ProtectedRoute = ({ children }) => {
 
   if (isLoading) {
     // Show loading indicator while checking authentication
-    return <div className="loading">Loading...</div>;
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        fontSize: '18px',
+        color: '#6B7280'
+      }}>
+        Verifying authentication...
+      </div>
+    );
   }
 
   console.log('🔐 Final render - isAuthenticated:', isAuthenticated);
