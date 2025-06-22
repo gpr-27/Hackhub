@@ -13,31 +13,20 @@ const ProtectedRoute = ({ children }) => {
       try {
         console.log('🔍 Checking auth at:', `${API_BASE_URL}/api/auth/check`);
         
-        // TEMPORARY: Clear old invalid tokens
-        const token = localStorage.getItem('authToken');
-        if (token && token.includes('eyJ')) {
-          console.log('🧹 Clearing potentially invalid old token...');
-          localStorage.removeItem('authToken');
-          console.log('🧹 Old token cleared, redirecting to login...');
-          setIsAuthenticated(false);
-          setIsLoading(false);
-          return;
-        }
-        
         // Small delay to ensure localStorage is available after navigation
         await new Promise(resolve => setTimeout(resolve, 100));
         
         // Get JWT token from localStorage
-        const newToken = localStorage.getItem('authToken');
-        console.log('🔑 JWT token from localStorage:', newToken ? 'Present' : 'Missing');
+        const token = localStorage.getItem('authToken');
+        console.log('🔑 JWT token from localStorage:', token ? 'Present' : 'Missing');
         
         const headers = {
           'Content-Type': 'application/json',
         };
         
         // Add JWT token to headers if available
-        if (newToken) {
-          headers.Authorization = `Bearer ${newToken}`;
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
         }
         
         const response = await fetch(`${API_BASE_URL}/api/auth/check`, {
