@@ -704,7 +704,8 @@ app.post('/api/login', async (req, res) => {
     
     console.log('🔐 Login success - Session ID:', req.sessionID);
     console.log('🔐 Login success - Session data:', req.session);
-    console.log('🔐 Login success - JWT token generated');
+    console.log('🔐 Login success - JWT token generated:', token.substring(0, 50) + '...');
+    console.log('🔐 JWT Secret being used:', jwtSecret.substring(0, 10) + '...');
     
     res.json({ 
       id: user._id,
@@ -731,6 +732,8 @@ app.get('/api/auth/check', (req, res) => {
   const token = authHeader && authHeader.split(' ')[1];
   
   if (token) {
+    console.log('🔍 JWT Token received:', token.substring(0, 50) + '...');
+    console.log('🔍 JWT Secret for verification:', jwtSecret.substring(0, 10) + '...');
     try {
       const decoded = jwt.verify(token, jwtSecret);
       console.log('✅ User authenticated via JWT:', decoded);
@@ -746,6 +749,7 @@ app.get('/api/auth/check', (req, res) => {
       return res.status(200).json(response);
     } catch (err) {
       console.log('❌ JWT verification failed:', err.message);
+      console.log('❌ JWT verification error details:', err);
     }
   }
   
