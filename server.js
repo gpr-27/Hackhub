@@ -77,8 +77,9 @@ app.use(session({
   cookie: {
     maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days in milliseconds
     httpOnly: true,
-    secure: true, // Always true for HTTPS
-    sameSite: 'none' // Required for cross-domain cookies
+    secure: true, // Always true for HTTPS (required for cross-domain)
+    sameSite: 'none', // Required for cross-domain cookies
+    domain: undefined // Let browser handle domain automatically
   }
 }));
 
