@@ -22,6 +22,8 @@ const Login = () => {
     }
 
     try {
+      console.log('🔄 Attempting login to:', `${API_BASE_URL}/api/login`);
+      
       const res = await fetch(`${API_BASE_URL}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -29,8 +31,11 @@ const Login = () => {
         credentials: 'include'
       });
       
+      console.log('📡 Login response status:', res.status);
+      
       if (!res.ok) {
         const errorText = await res.text();
+        console.log('❌ Login error response:', errorText);
         let errorData;
         try {
           errorData = JSON.parse(errorText);
@@ -40,9 +45,11 @@ const Login = () => {
         throw new Error(errorData.error || `Server error: ${res.status}`);
       }
       
-      await res.json();
+      const responseData = await res.json();
+      console.log('✅ Login successful, response:', responseData);
       
       // No need to store in localStorage, the server maintains the session
+      console.log('🔄 Navigating to dashboard...');
       setTimeout(() => {
         setIsLoading(false);
         navigate('/dashboard');

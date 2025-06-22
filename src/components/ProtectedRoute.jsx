@@ -11,14 +11,21 @@ const ProtectedRoute = ({ children }) => {
     // Check authentication status with the server
     const checkAuth = async () => {
       try {
+        console.log('🔍 Checking auth at:', `${API_BASE_URL}/api/auth/check`);
+        
         const response = await fetch(`${API_BASE_URL}/api/auth/check`, {
           method: 'GET',
           credentials: 'include',
         });
+        
+        console.log('🔐 Auth check response status:', response.status);
+        
         const data = await response.json();
+        console.log('🔐 Auth check response data:', data);
+        
         setIsAuthenticated(data.isAuthenticated);
       } catch (error) {
-        // Authentication check failed
+        console.log('❌ Auth check failed:', error);
         setIsAuthenticated(false);
       } finally {
         setIsLoading(false);
