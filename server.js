@@ -64,7 +64,7 @@ mongoose.connect(mongoConnectionString, {
 });
 
 // JWT configuration
-const jwtSecret = process.env.JWT_SECRET || 'default-jwt-secret-change-in-production';
+const jwtSecret = process.env.JWT_SECRET || 'health-app-jwt-secret-2024-production-key';
 
 // Session configuration
 const sessionSecret = process.env.SESSION_SECRET || 'default-session-secret-change-in-production';
