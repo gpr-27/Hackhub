@@ -48,7 +48,12 @@ const Login = () => {
       const responseData = await res.json();
       console.log('✅ Login successful, response:', responseData);
       
-      // No need to store in localStorage, the server maintains the session
+      // Store JWT token in localStorage
+      if (responseData.token) {
+        localStorage.setItem('authToken', responseData.token);
+        console.log('🔑 JWT token stored in localStorage');
+      }
+      
       console.log('🔄 Navigating to dashboard...');
       setTimeout(() => {
         setIsLoading(false);

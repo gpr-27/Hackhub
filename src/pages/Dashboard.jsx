@@ -118,11 +118,16 @@ function Dashboard() {
         credentials: 'include'
       });
 
+      // Clear JWT token from localStorage
+      localStorage.removeItem('authToken');
+      console.log('🔑 JWT token removed from localStorage');
+
       if (response.ok) {
         navigate('/login');
       }
     } catch (error) {
       // Force logout even if request fails
+      localStorage.removeItem('authToken');
       navigate('/login');
     }
   };

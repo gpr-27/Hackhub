@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 
@@ -62,8 +63,41 @@ mongoose.connect(mongoConnectionString, {
   console.log('MONGODB_CONNECTION_STRING=mongodb+srv://username:password@cluster.mongodb.net/healthcareDB');
 });
 
+// JWT configuration
+const jwtSecret = process.env.JWT_SECRET || 'default-jwt-secret-change-in-production';
+
 // Session configuration
 const sessionSecret = process.env.SESSION_SECRET || 'default-session-secret-change-in-production';
+
+// JWT helper functions
+const generateToken = (user) => {
+  return jwt.sign(
+    { 
+      id: user._id, 
+      email: user.email, 
+      name: user.name 
+    }, 
+    jwtSecret, 
+    { expiresIn: '7d' }
+  );
+};
+
+const verifyToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+  
+  if (!token) {
+    return res.status(401).json({ error: 'Access token required' });
+  }
+  
+  jwt.verify(token, jwtSecret, (err, user) => {
+    if (err) {
+      return res.status(403).json({ error: 'Invalid or expired token' });
+    }
+    req.user = user;
+    next();
+  });
+};
 
 app.use(session({
   secret: sessionSecret,
@@ -658,36 +692,64 @@ app.post('/api/login', async (req, res) => {
     user.lastLogin = getISTTime();
     await user.save();
     
-    // Store user in session
+    // Store user in session (for compatibility)
     req.session.user = {
       _id: user._id,
       email: user.email,
       name: user.name
     };
     
+    // Generate JWT token
+    const token = generateToken(user);
+    
     console.log('🔐 Login success - Session ID:', req.sessionID);
     console.log('🔐 Login success - Session data:', req.session);
+    console.log('🔐 Login success - JWT token generated');
     
     res.json({ 
       id: user._id,
       email: user.email, 
       name: user.name, 
       isAuthenticated: true,
-      lastLogin: user.lastLogin
+      lastLogin: user.lastLogin,
+      token: token // Include JWT token in response
     });
   } catch (err) {
     res.status(500).json({ error: 'Login failed', details: err.message });
   }
 });
 
-// Check if user is authenticated
+// Check if user is authenticated (supports both JWT and sessions)
 app.get('/api/auth/check', (req, res) => {
   console.log('🔍 Auth check - Session ID:', req.sessionID);
   console.log('🔍 Auth check - Session data:', req.session);
   console.log('🔍 Auth check - Cookies:', req.headers.cookie);
+  console.log('🔍 Auth check - Authorization header:', req.headers.authorization);
   
+  // Try JWT first
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(' ')[1];
+  
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, jwtSecret);
+      console.log('✅ User authenticated via JWT:', decoded);
+      return res.json({
+        isAuthenticated: true,
+        user: {
+          id: decoded.id,
+          name: decoded.name,
+          email: decoded.email
+        }
+      });
+    } catch (err) {
+      console.log('❌ JWT verification failed:', err.message);
+    }
+  }
+  
+  // Fall back to session
   if (req.session.user) {
-    console.log('✅ User authenticated:', req.session.user);
+    console.log('✅ User authenticated via session:', req.session.user);
     res.json({
       isAuthenticated: true,
       user: {
@@ -697,7 +759,7 @@ app.get('/api/auth/check', (req, res) => {
       }
     });
   } else {
-    console.log('❌ User not authenticated - no session data');
+    console.log('❌ User not authenticated - no session or token');
     res.json({ isAuthenticated: false });
   }
 });

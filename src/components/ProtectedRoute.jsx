@@ -13,9 +13,23 @@ const ProtectedRoute = ({ children }) => {
       try {
         console.log('🔍 Checking auth at:', `${API_BASE_URL}/api/auth/check`);
         
+        // Get JWT token from localStorage
+        const token = localStorage.getItem('authToken');
+        console.log('🔑 JWT token from localStorage:', token ? 'Present' : 'Missing');
+        
+        const headers = {
+          'Content-Type': 'application/json',
+        };
+        
+        // Add JWT token to headers if available
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+        
         const response = await fetch(`${API_BASE_URL}/api/auth/check`, {
           method: 'GET',
-          credentials: 'include',
+          headers: headers,
+          credentials: 'include', // Keep for session fallback
         });
         
         console.log('🔐 Auth check response status:', response.status);
