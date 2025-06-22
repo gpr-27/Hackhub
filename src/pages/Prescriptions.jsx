@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { API_BASE_URL } from '../config/api';
+import { API_BASE_URL, makeAuthenticatedRequest } from '../config/api';
 
 const Prescriptions = () => {
   const navigate = useNavigate();
@@ -23,22 +23,31 @@ const Prescriptions = () => {
   });
 
   useEffect(() => {
-    loadPrescriptions();
-  }, []);
-
-  const loadPrescriptions = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/prescriptions`, {
-        credentials: 'include'
-      });
-      if (response.ok) {
+    const fetchPrescriptions = async () => {
+      try {
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/prescriptions`, {
+          method: 'GET'
+        });
+        
+        if (!response.ok) {
+          if (response.status === 401) {
+            navigate('/login');
+            return;
+          }
+          throw new Error('Failed to fetch prescriptions');
+        }
+        
         const data = await response.json();
         setPrescriptions(data);
+      } catch (error) {
+        console.error('Error fetching prescriptions:', error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      // Error loading prescriptions
-    }
-  };
+    };
+    
+    fetchPrescriptions();
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -54,10 +63,9 @@ const Prescriptions = () => {
       
       const method = editMode ? 'PUT' : 'POST';
       
-      const response = await fetch(url, {
+      const response = await makeAuthenticatedRequest(url, {
         method: method,
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify(formData)
       });
 
@@ -73,7 +81,7 @@ const Prescriptions = () => {
         }
         
         resetForm();
-                    } else {
+      } else {
         // Failed to save prescription
       }
     } catch (error) {
@@ -116,21 +124,24 @@ const Prescriptions = () => {
   };
 
   const deletePrescription = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this prescription?')) return;
-    
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/prescriptions/${id}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        setPrescriptions(prescriptions.filter(prescription => prescription._id !== id));
-      } else {
-        // Failed to delete prescription
+    if (window.confirm("Are you sure you want to delete this prescription?")) {
+      try {
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/prescriptions/${id}`, {
+          method: "DELETE"
+        });
+        
+        if (!response.ok) {
+          if (response.status === 401) {
+            navigate('/login');
+            return;
+          }
+          throw new Error('Failed to delete prescription');
+        }
+        
+        setPrescriptions(prescriptions.filter((prescription) => prescription._id !== id));
+      } catch (error) {
+        console.error('Error deleting prescription:', error);
       }
-    } catch (error) {
-      // Error deleting prescription
     }
   };
 

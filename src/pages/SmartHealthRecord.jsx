@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { API_BASE_URL } from '../config/api';
+import { API_BASE_URL, makeAuthenticatedRequest } from '../config/api';
 
 const SmartHealthRecord = () => {
   const navigate = useNavigate();
@@ -16,23 +16,25 @@ const SmartHealthRecord = () => {
     type: "family"
   });
 
-  useEffect(() => {
-    loadEmergencyContacts();
-  }, []);
-
-  const loadEmergencyContacts = async () => {
+  const loadEmergencyContacts = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/emergency-contacts`, {
-        credentials: 'include'
+      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/emergency-contacts`, {
+        method: 'GET'
       });
       if (response.ok) {
         const data = await response.json();
         setEmergencyContacts(data);
+      } else if (response.status === 401) {
+        navigate('/login');
       }
     } catch (error) {
-      // Error loading emergency contacts
+      console.error('Error loading emergency contacts:', error);
     }
-  };
+  }, [navigate]);
+
+  useEffect(() => {
+    loadEmergencyContacts();
+  }, [loadEmergencyContacts]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -44,17 +46,13 @@ const SmartHealthRecord = () => {
     try {
       let response;
       if (editMode) {
-        response = await fetch(`${API_BASE_URL}/api/emergency-contacts/${editingId}`, {
+        response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/emergency-contacts/${editingId}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
           body: JSON.stringify(newContact)
         });
       } else {
-        response = await fetch(`${API_BASE_URL}/api/emergency-contacts`, {
+        response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/emergency-contacts`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
           body: JSON.stringify(newContact)
         });
       }
@@ -69,11 +67,13 @@ const SmartHealthRecord = () => {
           setEmergencyContacts([...emergencyContacts, savedContact]);
         }
         resetForm();
+      } else if (response.status === 401) {
+        navigate('/login');
       } else {
-        // Failed to save emergency contact
+        console.error('Failed to save emergency contact');
       }
     } catch (error) {
-      // Error saving emergency contact
+      console.error('Error saving emergency contact:', error);
     } finally {
       setLoading(false);
     }
@@ -102,18 +102,19 @@ const SmartHealthRecord = () => {
     if (!window.confirm('Are you sure you want to delete this emergency contact?')) return;
     
     try {
-      const response = await fetch(`${API_BASE_URL}/api/emergency-contacts/${id}`, {
-        method: 'DELETE',
-        credentials: 'include'
+      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/emergency-contacts/${id}`, {
+        method: 'DELETE'
       });
 
       if (response.ok) {
         setEmergencyContacts(emergencyContacts.filter(contact => contact._id !== id));
+      } else if (response.status === 401) {
+        navigate('/login');
       } else {
-        // Failed to delete emergency contact
+        console.error('Failed to delete emergency contact');
       }
     } catch (error) {
-      // Error deleting emergency contact
+      console.error('Error deleting emergency contact:', error);
     }
   };
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { API_BASE_URL } from '../config/api';
+import { API_BASE_URL, makeAuthenticatedRequest } from '../config/api';
 
 const LabReports = () => {
   const navigate = useNavigate();
@@ -22,22 +22,31 @@ const LabReports = () => {
   });
 
   useEffect(() => {
-    loadReports();
-  }, []);
-
-  const loadReports = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/lab-reports`, {
-        credentials: 'include'
-      });
-      if (response.ok) {
+    const fetchLabReports = async () => {
+      try {
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/lab-reports`, {
+          method: 'GET'
+        });
+        
+        if (!response.ok) {
+          if (response.status === 401) {
+            navigate('/login');
+            return;
+          }
+          throw new Error('Failed to fetch lab reports');
+        }
+        
         const data = await response.json();
         setReports(data);
+      } catch (error) {
+        console.error('Error fetching lab reports:', error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      // Error loading lab reports
-    }
-  };
+    };
+    
+    fetchLabReports();
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -53,10 +62,9 @@ const LabReports = () => {
       
       const method = editMode ? 'PUT' : 'POST';
       
-      const response = await fetch(url, {
+      const response = await makeAuthenticatedRequest(url, {
         method: method,
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify(formData)
       });
 
@@ -72,7 +80,7 @@ const LabReports = () => {
         }
         
         resetForm();
-                    } else {
+      } else {
         // Failed to save lab report
       }
     } catch (error) {
@@ -113,21 +121,24 @@ const LabReports = () => {
   };
 
   const deleteReport = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this lab report?')) return;
-    
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/lab-reports/${id}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        setReports(reports.filter(report => report._id !== id));
-      } else {
-        // Failed to delete lab report
+    if (window.confirm("Are you sure you want to delete this lab report?")) {
+      try {
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/lab-reports/${id}`, {
+          method: "DELETE"
+        });
+        
+        if (!response.ok) {
+          if (response.status === 401) {
+            navigate('/login');
+            return;
+          }
+          throw new Error('Failed to delete lab report');
+        }
+        
+        setReports(reports.filter((report) => report._id !== id));
+      } catch (error) {
+        console.error('Error deleting lab report:', error);
       }
-    } catch (error) {
-      // Error deleting lab report
     }
   };
 

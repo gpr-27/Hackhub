@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { API_BASE_URL } from '../config/api';
+import { API_BASE_URL, makeAuthenticatedRequest } from '../config/api';
 
 const DoctorVisits = () => {
   const navigate = useNavigate();
@@ -25,26 +25,31 @@ const DoctorVisits = () => {
   });
 
   useEffect(() => {
-    loadVisits();
-  }, []);
-
-  const loadVisits = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/doctor-visits`, {
-        credentials: 'include'
-      });
-      if (response.ok) {
+    const fetchDoctorVisits = async () => {
+      try {
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/doctor-visits`, {
+          method: 'GET'
+        });
+        
+        if (!response.ok) {
+          if (response.status === 401) {
+            navigate('/login');
+            return;
+          }
+          throw new Error('Failed to fetch doctor visits');
+        }
+        
         const data = await response.json();
         setVisits(data);
-      } else if (response.status === 401) {
-        // User not authenticated
-      } else {
-        // Failed to load visits
+      } catch (error) {
+        console.error('Error fetching doctor visits:', error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      // Error loading doctor visits
-    }
-  };
+    };
+    
+    fetchDoctorVisits();
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -56,17 +61,15 @@ const DoctorVisits = () => {
     try {
       let response;
       if (editMode) {
-        response = await fetch(`${API_BASE_URL}/api/doctor-visits/${editingId}`, {
+        response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/doctor-visits/${editingId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
           body: JSON.stringify(formData)
         });
       } else {
-        response = await fetch(`${API_BASE_URL}/api/doctor-visits`, {
+        response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/doctor-visits`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
           body: JSON.stringify(formData)
         });
       }
@@ -131,9 +134,8 @@ const DoctorVisits = () => {
     if (!window.confirm('Are you sure you want to delete this visit record?')) return;
     
     try {
-      const response = await fetch(`${API_BASE_URL}/api/doctor-visits/${id}`, {
-        method: 'DELETE',
-        credentials: 'include'
+      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/doctor-visits/${id}`, {
+        method: 'DELETE'
       });
 
       if (response.ok) {
@@ -643,32 +645,32 @@ const DoctorVisits = () => {
             background: white;
             box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
           }
-                      .search-icon {
-              position: absolute;
-              left: 15px;
-              top: 50%;
-              transform: translateY(-50%);
-              color: #6b7280;
-              font-size: 1.1rem;
-              z-index: 1;
-            }
-            .filter-select {
-              padding: 12px 16px;
-              border: 2px solid #e5e7eb;
-              border-radius: 12px;
-              font-size: 1rem;
-              background: #f9fafb;
-              cursor: pointer;
-              transition: all 0.3s ease;
-              min-width: 150px;
-              box-sizing: border-box;
-            }
-            .filter-select:focus {
-              outline: none;
-              border-color: #8b5cf6;
-              background: white;
-              box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
-            }
+          .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b7280;
+            font-size: 1.1rem;
+            z-index: 1;
+          }
+          .filter-select {
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            background: #f9fafb;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 150px;
+            box-sizing: border-box;
+          }
+          .filter-select:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+          }
           .no-visits {
             text-align: center;
             background: white;

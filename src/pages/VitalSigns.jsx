@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { API_BASE_URL } from '../config/api';
+import { API_BASE_URL, makeAuthenticatedRequest } from '../config/api';
 
 const VitalSigns = () => {
   const navigate = useNavigate();
@@ -26,22 +26,31 @@ const VitalSigns = () => {
   });
 
   useEffect(() => {
-    loadVitals();
-  }, []);
-
-  const loadVitals = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/vital-signs`, {
-        credentials: 'include'
-      });
-      if (response.ok) {
+    const fetchVitalSigns = async () => {
+      try {
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/vital-signs`, {
+          method: 'GET'
+        });
+        
+        if (!response.ok) {
+          if (response.status === 401) {
+            navigate('/login');
+            return;
+          }
+          throw new Error('Failed to fetch vital signs');
+        }
+        
         const data = await response.json();
         setVitals(data);
+      } catch (error) {
+        console.error('Error fetching vital signs:', error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      // Error loading vital signs
-    }
-  };
+    };
+    
+    fetchVitalSigns();
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -57,10 +66,9 @@ const VitalSigns = () => {
       
       const method = editMode ? 'PUT' : 'POST';
       
-      const response = await fetch(url, {
+      const response = await makeAuthenticatedRequest(url, {
         method: method,
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify(formData)
       });
 
@@ -78,7 +86,7 @@ const VitalSigns = () => {
         resetForm();
       }
     } catch (error) {
-      // Error saving vital signs
+      console.error('Error saving vital signs:', error);
     } finally {
       setLoading(false);
     }
@@ -135,21 +143,24 @@ const VitalSigns = () => {
   };
 
   const deleteVital = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this vital signs record?')) return;
-    
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/vital-signs/${id}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        setVitals(vitals.filter(vital => vital._id !== id));
-      } else {
-        // Failed to delete vital signs record
+    if (window.confirm("Are you sure you want to delete this vital sign record?")) {
+      try {
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/vital-signs/${id}`, {
+          method: "DELETE"
+        });
+        
+        if (!response.ok) {
+          if (response.status === 401) {
+            navigate('/login');
+            return;
+          }
+          throw new Error('Failed to delete vital sign');
+        }
+        
+        setVitals(vitals.filter((vital) => vital._id !== id));
+      } catch (error) {
+        console.error('Error deleting vital sign:', error);
       }
-    } catch (error) {
-      // Error deleting vital signs
     }
   };
 
@@ -595,32 +606,32 @@ const VitalSigns = () => {
             background: white;
             box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
           }
-                      .search-icon {
-              position: absolute;
-              left: 15px;
-              top: 50%;
-              transform: translateY(-50%);
-              color: #6b7280;
-              font-size: 1.1rem;
-              z-index: 1;
-            }
-            .filter-select {
-              padding: 12px 16px;
-              border: 2px solid #e5e7eb;
-              border-radius: 12px;
-              font-size: 1rem;
-              background: #f9fafb;
-              cursor: pointer;
-              transition: all 0.3s ease;
-              min-width: 150px;
-              box-sizing: border-box;
-            }
-            .filter-select:focus {
-              outline: none;
-              border-color: #ef4444;
-              background: white;
-              box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
-            }
+          .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b7280;
+            font-size: 1.1rem;
+            z-index: 1;
+          }
+          .filter-select {
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            background: #f9fafb;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 150px;
+            box-sizing: border-box;
+          }
+          .filter-select:focus {
+            outline: none;
+            border-color: #ef4444;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+          }
           .no-vitals {
             text-align: center;
             background: white;

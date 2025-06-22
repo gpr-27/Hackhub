@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { API_BASE_URL } from '../config/api';
+import { API_BASE_URL, makeAuthenticatedRequest } from '../config/api';
 
 const MedicalHistory = () => {
   const navigate = useNavigate();
@@ -21,22 +21,31 @@ const MedicalHistory = () => {
   });
 
   useEffect(() => {
-    loadRecords();
-  }, []);
-
-  const loadRecords = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/medical-history`, {
-        credentials: 'include'
-      });
-      if (response.ok) {
+    const fetchMedicalHistory = async () => {
+      try {
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/medical-history`, {
+          method: 'GET'
+        });
+        
+        if (!response.ok) {
+          if (response.status === 401) {
+            navigate('/login');
+            return;
+          }
+          throw new Error('Failed to fetch medical history');
+        }
+        
         const data = await response.json();
         setRecords(data);
+      } catch (error) {
+        console.error('Error fetching medical history:', error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      // Error loading medical history
-    }
-  };
+    };
+    
+    fetchMedicalHistory();
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -52,10 +61,9 @@ const MedicalHistory = () => {
       
       const method = editMode ? 'PUT' : 'POST';
       
-      const response = await fetch(url, {
+      const response = await makeAuthenticatedRequest(url, {
         method: method,
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify(formData)
       });
 
@@ -110,21 +118,24 @@ const MedicalHistory = () => {
   };
 
   const deleteRecord = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this record?')) return;
-    
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/medical-history/${id}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        setRecords(records.filter(record => record._id !== id));
-      } else {
-        // Failed to delete record
+    if (window.confirm("Are you sure you want to delete this medical record?")) {
+      try {
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/medical-history/${id}`, {
+          method: "DELETE"
+        });
+        
+        if (!response.ok) {
+          if (response.status === 401) {
+            navigate('/login');
+            return;
+          }
+          throw new Error('Failed to delete medical record');
+        }
+        
+        setRecords(records.filter((record) => record._id !== id));
+      } catch (error) {
+        console.error('Error deleting medical record:', error);
       }
-    } catch (error) {
-      // Error deleting record
     }
   };
 

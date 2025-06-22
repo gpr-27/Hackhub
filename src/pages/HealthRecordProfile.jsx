@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { API_BASE_URL } from '../config/api';
+import { API_BASE_URL, makeAuthenticatedRequest } from '../config/api';
 
 const HealthRecordProfile = () => {
   const navigate = useNavigate();
@@ -25,38 +25,43 @@ const HealthRecordProfile = () => {
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
-    loadProfile();
-  }, []);
-
-  const loadProfile = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/health-profile`, {
-        credentials: 'include'
-      });
-      if (response.ok) {
-        const profile = await response.json();
-        if (profile && Object.keys(profile).length > 0) {
+    const fetchHealthProfile = async () => {
+      try {
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/health-profile`, {
+          method: 'GET'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
           setFormData({
-            dateOfBirth: profile.dateOfBirth || "",
-            gender: profile.gender || "",
-            bloodType: profile.bloodType || "",
-            height: profile.height || "",
-            weight: profile.weight || "",
-            allergies: profile.allergies?.join(", ") || "",
-            chronicConditions: profile.chronicConditions?.join(", ") || "",
-            emergencyContact: profile.emergencyContact || "",
+            dateOfBirth: data.dateOfBirth || "",
+            gender: data.gender || "",
+            bloodType: data.bloodType || "",
+            height: data.height || "",
+            weight: data.weight || "",
+            allergies: data.allergies?.join(", ") || "",
+            chronicConditions: data.chronicConditions?.join(", ") || "",
+            emergencyContact: data.emergencyContact || "",
             insurance: {
-              provider: profile.insurance?.provider || "",
-              policyNumber: profile.insurance?.policyNumber || "",
-              groupNumber: profile.insurance?.groupNumber || ""
+              provider: data.insurance?.provider || "",
+              policyNumber: data.insurance?.policyNumber || "",
+              groupNumber: data.insurance?.groupNumber || ""
             }
           });
+        } else if (response.status === 401) {
+          navigate('/login');
+        } else {
+          console.error('Failed to fetch health profile');
         }
+      } catch (error) {
+        console.error('Error fetching health profile:', error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      // Error loading health profile
-    }
-  };
+    };
+
+    fetchHealthProfile();
+  }, [navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -83,23 +88,25 @@ const HealthRecordProfile = () => {
         chronicConditions: formData.chronicConditions ? formData.chronicConditions.split(',').map(item => item.trim()) : []
       };
 
-      const response = await fetch(`${API_BASE_URL}/api/health-profile`, {
+      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/health-profile`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify(profileData)
       });
 
       if (response.ok) {
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);
+      } else if (response.status === 401) {
+        navigate('/login');
       } else {
-        // Failed to save profile
+        console.error('Failed to save health profile');
       }
     } catch (error) {
-      // Error saving profile
+      console.error('Error saving health profile:', error);
+      setSaveSuccess(false);
     } finally {
       setLoading(false);
     }
