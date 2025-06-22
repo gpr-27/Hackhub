@@ -99,6 +99,39 @@ const verifyToken = (req, res, next) => {
   });
 };
 
+// Middleware that supports both JWT and session authentication
+const authenticateUser = (req, res, next) => {
+  // Try JWT first
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(' ')[1];
+  
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, jwtSecret);
+      console.log('🔍 User authenticated via JWT:', decoded.email);
+      req.user = {
+        _id: decoded.id,
+        email: decoded.email,
+        name: decoded.name
+      };
+      return next();
+    } catch (err) {
+      console.log('❌ JWT verification failed:', err.message);
+      // Don't return here, fall back to session
+    }
+  }
+  
+  // Fall back to session
+  if (req.session.user) {
+    console.log('🔍 User authenticated via session:', req.session.user.email);
+    req.user = req.session.user;
+    return next();
+  }
+  
+  console.log('❌ User not authenticated - no valid JWT or session');
+  return res.status(401).json({ error: 'Not authenticated' });
+};
+
 app.use(session({
   secret: sessionSecret,
   resave: false,
@@ -392,14 +425,9 @@ const MoodSchema = new mongoose.Schema({
 const Mood = mongoose.model('Mood', MoodSchema);
 
 // Get all medications for the logged-in user
-app.get('/api/medications', async (req, res) => {
+app.get('/api/medications', authenticateUser, async (req, res) => {
   try {
-    // Get userId from session
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    
-    const userId = req.session.user._id;
+    const userId = req.user._id;
     const meds = await Medication.find({ userId });
     res.json(meds);
   } catch (err) {
@@ -408,15 +436,10 @@ app.get('/api/medications', async (req, res) => {
 });
 
 // Add a medication
-app.post('/api/medications', async (req, res) => {
+app.post('/api/medications', authenticateUser, async (req, res) => {
   try {
-    // Get userId from session
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    
     const { name, time, dosage, tillDate } = req.body;
-    const userId = req.session.user._id;
+    const userId = req.user._id;
     
     const med = new Medication({ name, time, dosage, tillDate, userId });
     await med.save();
@@ -427,14 +450,9 @@ app.post('/api/medications', async (req, res) => {
 });
 
 // Delete a medication by ID
-app.delete('/api/medications/:id', async (req, res) => {
+app.delete('/api/medications/:id', authenticateUser, async (req, res) => {
   try {
-    // Get userId from session
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    
-    const userId = req.session.user._id;
+    const userId = req.user._id;
     
     // Ensure the medication belongs to the logged-in user
     const medication = await Medication.findById(req.params.id);
@@ -454,14 +472,9 @@ app.delete('/api/medications/:id', async (req, res) => {
 });
 
 // Update a medication by ID
-app.put('/api/medications/:id', async (req, res) => {
+app.put('/api/medications/:id', authenticateUser, async (req, res) => {
   try {
-    // Get userId from session
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    
-    const userId = req.session.user._id;
+    const userId = req.user._id;
     const { name, time, dosage, tillDate } = req.body;
     
     // Ensure the medication belongs to the logged-in user
@@ -490,13 +503,9 @@ app.put('/api/medications/:id', async (req, res) => {
 // Mood API Endpoints
 
 // Get all mood entries for the logged-in user
-app.get('/api/moods', async (req, res) => {
+app.get('/api/moods', authenticateUser, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    
-    const userId = req.session.user._id;
+    const userId = req.user._id;
     const moods = await Mood.find({ userId }).sort({ date: -1, timestamp: -1 });
     res.json(moods);
   } catch (err) {
@@ -505,14 +514,10 @@ app.get('/api/moods', async (req, res) => {
 });
 
 // Add a mood entry
-app.post('/api/moods', async (req, res) => {
+app.post('/api/moods', authenticateUser, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    
     const { mood, notes, date } = req.body;
-    const userId = req.session.user._id;
+    const userId = req.user._id;
     
     if (!mood || !date) {
       return res.status(400).json({ error: 'Mood and date are required' });
@@ -529,13 +534,9 @@ app.post('/api/moods', async (req, res) => {
 });
 
 // Update a mood entry by ID
-app.put('/api/moods/:id', async (req, res) => {
+app.put('/api/moods/:id', authenticateUser, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    
-    const userId = req.session.user._id;
+    const userId = req.user._id;
     const { mood, notes } = req.body;
     
     // Ensure the mood entry belongs to the logged-in user
@@ -562,13 +563,9 @@ app.put('/api/moods/:id', async (req, res) => {
 });
 
 // Delete a mood entry by ID
-app.delete('/api/moods/:id', async (req, res) => {
+app.delete('/api/moods/:id', authenticateUser, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    
-    const userId = req.session.user._id;
+    const userId = req.user._id;
     
     // Ensure the mood entry belongs to the logged-in user
     const moodEntry = await Mood.findById(req.params.id);
@@ -777,9 +774,7 @@ app.get('/api/auth/check', (req, res) => {
 // Get user profile
 app.get('/api/auth/profile', async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
+    // Authentication handled by authenticateUser middleware
     
     // Fetch complete user data
     const user = await User.findById(req.session.user._id);
@@ -807,9 +802,7 @@ app.get('/api/auth/profile', async (req, res) => {
 // Update user profile
 app.put('/api/auth/profile', async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
+    // Authentication handled by authenticateUser middleware
     
     const { name, email, avatar, phone, dateOfBirth, gender, address } = req.body;
     
@@ -870,13 +863,13 @@ app.post('/api/auth/logout', (req, res) => {
 
 // Health Chat API Endpoints
 // Get chat history for the logged-in user
-app.get('/api/chat/messages', async (req, res) => {
+app.get('/api/chat/messages', authenticateUser, async (req, res) => {
   try {
     // For development purposes, allow access even without authentication
     let userId;
     
     if (req.session.user) {
-      userId = req.session.user._id;
+      userId = req.user._id;
     } else {
       // Find a user to use for demo purposes
       const demoUser = await User.findOne();
@@ -898,13 +891,13 @@ app.get('/api/chat/messages', async (req, res) => {
 });
 
 // Save a new chat message
-app.post('/api/chat/messages', async (req, res) => {
+app.post('/api/chat/messages', authenticateUser, async (req, res) => {
   try {
     // For development purposes, allow saving even without authentication
     let userId;
     
     if (req.session.user) {
-      userId = req.session.user._id;
+      userId = req.user._id;
     } else {
       // Find a user to use for demo purposes
       const demoUser = await User.findOne();
@@ -937,7 +930,7 @@ app.post('/api/chat/messages', async (req, res) => {
 // Smart Health Record API Endpoints
 
 // Emergency Contacts APIs
-app.get('/api/emergency-contacts', async (req, res) => {
+app.get('/api/emergency-contacts', authenticateUser, async (req, res) => {
   try {
     if (!req.session.user) {
       // For demo purposes, create a test user if none exists
@@ -958,7 +951,7 @@ app.get('/api/emergency-contacts', async (req, res) => {
       };
     }
     
-    const userId = req.session.user._id;
+    const userId = req.user._id;
     const contacts = await EmergencyContact.find({ userId }).sort({ dateAdded: -1 });
     res.json(contacts);
   } catch (err) {
@@ -967,7 +960,7 @@ app.get('/api/emergency-contacts', async (req, res) => {
   }
 });
 
-app.post('/api/emergency-contacts', async (req, res) => {
+app.post('/api/emergency-contacts', authenticateUser, async (req, res) => {
   try {
     
     if (!req.session.user) {
@@ -991,7 +984,7 @@ app.post('/api/emergency-contacts', async (req, res) => {
       console.log('Using demo user for session');
     }
     
-    const userId = req.session.user._id;
+    const userId = req.user._id;
     const contact = new EmergencyContact({ ...req.body, userId });
     const savedContact = await contact.save();
     res.json(savedContact);
@@ -1001,12 +994,10 @@ app.post('/api/emergency-contacts', async (req, res) => {
   }
 });
 
-app.put('/api/emergency-contacts/:id', async (req, res) => {
+app.put('/api/emergency-contacts/:id', authenticateUser, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    const userId = req.session.user._id;
+    // Authentication handled by authenticateUser middleware
+    const userId = req.user._id;
     const contact = await EmergencyContact.findById(req.params.id);
     if (!contact || contact.userId.toString() !== userId.toString()) {
       return res.status(404).json({ error: 'Contact not found' });
@@ -1022,12 +1013,10 @@ app.put('/api/emergency-contacts/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/emergency-contacts/:id', async (req, res) => {
+app.delete('/api/emergency-contacts/:id', authenticateUser, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    const userId = req.session.user._id;
+    // Authentication handled by authenticateUser middleware
+    const userId = req.user._id;
     const contact = await EmergencyContact.findById(req.params.id);
     if (!contact || contact.userId.toString() !== userId.toString()) {
       return res.status(404).json({ error: 'Contact not found' });
@@ -1040,12 +1029,10 @@ app.delete('/api/emergency-contacts/:id', async (req, res) => {
 });
 
 // Health Profile APIs
-app.get('/api/health-profile', async (req, res) => {
+app.get('/api/health-profile', authenticateUser, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    const userId = req.session.user._id;
+    // Authentication handled by authenticateUser middleware
+    const userId = req.user._id;
     const profile = await HealthProfile.findOne({ userId });
     res.json(profile || {});
   } catch (err) {
@@ -1053,12 +1040,10 @@ app.get('/api/health-profile', async (req, res) => {
   }
 });
 
-app.post('/api/health-profile', async (req, res) => {
+app.post('/api/health-profile', authenticateUser, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    const userId = req.session.user._id;
+    // Authentication handled by authenticateUser middleware
+    const userId = req.user._id;
     const existingProfile = await HealthProfile.findOne({ userId });
     
     if (existingProfile) {
@@ -1079,12 +1064,10 @@ app.post('/api/health-profile', async (req, res) => {
 });
 
 // Medical History APIs
-app.get('/api/medical-history', async (req, res) => {
+app.get('/api/medical-history', authenticateUser, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    const userId = req.session.user._id;
+    // Authentication handled by authenticateUser middleware
+    const userId = req.user._id;
     const history = await MedicalHistory.find({ userId }).sort({ dateAdded: -1 });
     res.json(history);
   } catch (err) {
@@ -1092,12 +1075,10 @@ app.get('/api/medical-history', async (req, res) => {
   }
 });
 
-app.post('/api/medical-history', async (req, res) => {
+app.post('/api/medical-history', authenticateUser, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    const userId = req.session.user._id;
+    // Authentication handled by authenticateUser middleware
+    const userId = req.user._id;
     const record = new MedicalHistory({ ...req.body, userId });
     await record.save();
     res.json(record);
@@ -1106,12 +1087,10 @@ app.post('/api/medical-history', async (req, res) => {
   }
 });
 
-app.put('/api/medical-history/:id', async (req, res) => {
+app.put('/api/medical-history/:id', authenticateUser, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    const userId = req.session.user._id;
+    // Authentication handled by authenticateUser middleware
+    const userId = req.user._id;
     const record = await MedicalHistory.findById(req.params.id);
     if (!record || record.userId.toString() !== userId.toString()) {
       return res.status(404).json({ error: 'Record not found' });
@@ -1127,12 +1106,10 @@ app.put('/api/medical-history/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/medical-history/:id', async (req, res) => {
+app.delete('/api/medical-history/:id', authenticateUser, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    const userId = req.session.user._id;
+    // Authentication handled by authenticateUser middleware
+    const userId = req.user._id;
     const record = await MedicalHistory.findById(req.params.id);
     if (!record || record.userId.toString() !== userId.toString()) {
       return res.status(404).json({ error: 'Record not found' });
@@ -1145,12 +1122,10 @@ app.delete('/api/medical-history/:id', async (req, res) => {
 });
 
 // Lab Reports APIs
-app.get('/api/lab-reports', async (req, res) => {
+app.get('/api/lab-reports', authenticateUser, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    const userId = req.session.user._id;
+    // Authentication handled by authenticateUser middleware
+    const userId = req.user._id;
     const reports = await LabReport.find({ userId }).sort({ dateAdded: -1 });
     res.json(reports);
   } catch (err) {
@@ -1158,12 +1133,10 @@ app.get('/api/lab-reports', async (req, res) => {
   }
 });
 
-app.post('/api/lab-reports', async (req, res) => {
+app.post('/api/lab-reports', authenticateUser, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    const userId = req.session.user._id;
+    // Authentication handled by authenticateUser middleware
+    const userId = req.user._id;
     const report = new LabReport({ ...req.body, userId });
     await report.save();
     res.json(report);
@@ -1172,12 +1145,10 @@ app.post('/api/lab-reports', async (req, res) => {
   }
 });
 
-app.put('/api/lab-reports/:id', async (req, res) => {
+app.put('/api/lab-reports/:id', authenticateUser, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    const userId = req.session.user._id;
+    // Authentication handled by authenticateUser middleware
+    const userId = req.user._id;
     const report = await LabReport.findById(req.params.id);
     if (!report || report.userId.toString() !== userId.toString()) {
       return res.status(404).json({ error: 'Report not found' });
@@ -1193,12 +1164,10 @@ app.put('/api/lab-reports/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/lab-reports/:id', async (req, res) => {
+app.delete('/api/lab-reports/:id', authenticateUser, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    const userId = req.session.user._id;
+    // Authentication handled by authenticateUser middleware
+    const userId = req.user._id;
     const report = await LabReport.findById(req.params.id);
     if (!report || report.userId.toString() !== userId.toString()) {
       return res.status(404).json({ error: 'Report not found' });
@@ -1211,12 +1180,10 @@ app.delete('/api/lab-reports/:id', async (req, res) => {
 });
 
 // Doctor Visits APIs
-app.get('/api/doctor-visits', async (req, res) => {
+app.get('/api/doctor-visits', authenticateUser, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    const userId = req.session.user._id;
+    // Authentication handled by authenticateUser middleware
+    const userId = req.user._id;
     const visits = await DoctorVisit.find({ userId }).sort({ dateAdded: -1 });
     res.json(visits);
   } catch (err) {
@@ -1224,12 +1191,10 @@ app.get('/api/doctor-visits', async (req, res) => {
   }
 });
 
-app.post('/api/doctor-visits', async (req, res) => {
+app.post('/api/doctor-visits', authenticateUser, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    const userId = req.session.user._id;
+    // Authentication handled by authenticateUser middleware
+    const userId = req.user._id;
     const visit = new DoctorVisit({ ...req.body, userId });
     await visit.save();
     res.json(visit);
@@ -1238,12 +1203,10 @@ app.post('/api/doctor-visits', async (req, res) => {
   }
 });
 
-app.put('/api/doctor-visits/:id', async (req, res) => {
+app.put('/api/doctor-visits/:id', authenticateUser, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    const userId = req.session.user._id;
+    // Authentication handled by authenticateUser middleware
+    const userId = req.user._id;
     const visit = await DoctorVisit.findById(req.params.id);
     if (!visit || visit.userId.toString() !== userId.toString()) {
       return res.status(404).json({ error: 'Visit not found' });
@@ -1259,12 +1222,10 @@ app.put('/api/doctor-visits/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/doctor-visits/:id', async (req, res) => {
+app.delete('/api/doctor-visits/:id', authenticateUser, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    const userId = req.session.user._id;
+    // Authentication handled by authenticateUser middleware
+    const userId = req.user._id;
     const visit = await DoctorVisit.findById(req.params.id);
     if (!visit || visit.userId.toString() !== userId.toString()) {
       return res.status(404).json({ error: 'Visit not found' });
@@ -1277,12 +1238,10 @@ app.delete('/api/doctor-visits/:id', async (req, res) => {
 });
 
 // Prescriptions APIs
-app.get('/api/prescriptions', async (req, res) => {
+app.get('/api/prescriptions', authenticateUser, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    const userId = req.session.user._id;
+    // Authentication handled by authenticateUser middleware
+    const userId = req.user._id;
     const prescriptions = await Prescription.find({ userId }).sort({ dateAdded: -1 });
     res.json(prescriptions);
   } catch (err) {
@@ -1290,12 +1249,10 @@ app.get('/api/prescriptions', async (req, res) => {
   }
 });
 
-app.post('/api/prescriptions', async (req, res) => {
+app.post('/api/prescriptions', authenticateUser, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    const userId = req.session.user._id;
+    // Authentication handled by authenticateUser middleware
+    const userId = req.user._id;
     const prescription = new Prescription({ ...req.body, userId });
     await prescription.save();
     res.json(prescription);
@@ -1304,12 +1261,10 @@ app.post('/api/prescriptions', async (req, res) => {
   }
 });
 
-app.put('/api/prescriptions/:id', async (req, res) => {
+app.put('/api/prescriptions/:id', authenticateUser, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    const userId = req.session.user._id;
+    // Authentication handled by authenticateUser middleware
+    const userId = req.user._id;
     const prescription = await Prescription.findById(req.params.id);
     if (!prescription || prescription.userId.toString() !== userId.toString()) {
       return res.status(404).json({ error: 'Prescription not found' });
@@ -1325,12 +1280,10 @@ app.put('/api/prescriptions/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/prescriptions/:id', async (req, res) => {
+app.delete('/api/prescriptions/:id', authenticateUser, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    const userId = req.session.user._id;
+    // Authentication handled by authenticateUser middleware
+    const userId = req.user._id;
     const prescription = await Prescription.findById(req.params.id);
     if (!prescription || prescription.userId.toString() !== userId.toString()) {
       return res.status(404).json({ error: 'Prescription not found' });
@@ -1343,12 +1296,10 @@ app.delete('/api/prescriptions/:id', async (req, res) => {
 });
 
 // Vital Signs APIs
-app.get('/api/vital-signs', async (req, res) => {
+app.get('/api/vital-signs', authenticateUser, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    const userId = req.session.user._id;
+    // Authentication handled by authenticateUser middleware
+    const userId = req.user._id;
     const vitals = await VitalSigns.find({ userId }).sort({ date: -1, dateAdded: -1 });
     res.json(vitals);
   } catch (err) {
@@ -1356,12 +1307,10 @@ app.get('/api/vital-signs', async (req, res) => {
   }
 });
 
-app.post('/api/vital-signs', async (req, res) => {
+app.post('/api/vital-signs', authenticateUser, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    const userId = req.session.user._id;
+    // Authentication handled by authenticateUser middleware
+    const userId = req.user._id;
     const vitals = new VitalSigns({ ...req.body, userId });
     await vitals.save();
     res.json(vitals);
@@ -1370,12 +1319,10 @@ app.post('/api/vital-signs', async (req, res) => {
   }
 });
 
-app.put('/api/vital-signs/:id', async (req, res) => {
+app.put('/api/vital-signs/:id', authenticateUser, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    const userId = req.session.user._id;
+    // Authentication handled by authenticateUser middleware
+    const userId = req.user._id;
     const vitals = await VitalSigns.findById(req.params.id);
     if (!vitals || vitals.userId.toString() !== userId.toString()) {
       return res.status(404).json({ error: 'Vital signs record not found' });
@@ -1391,12 +1338,10 @@ app.put('/api/vital-signs/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/vital-signs/:id', async (req, res) => {
+app.delete('/api/vital-signs/:id', authenticateUser, async (req, res) => {
   try {
-    if (!req.session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-    const userId = req.session.user._id;
+    // Authentication handled by authenticateUser middleware
+    const userId = req.user._id;
     const vitals = await VitalSigns.findById(req.params.id);
     if (!vitals || vitals.userId.toString() !== userId.toString()) {
       return res.status(404).json({ error: 'Vital signs record not found' });
