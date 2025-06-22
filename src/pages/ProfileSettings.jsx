@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/ProfileSettings.css';
+import API_BASE_URL from '../config/api';
 
 const ProfileSettings = () => {
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ const ProfileSettings = () => {
 
   const fetchUserProfile = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/auth/profile', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
@@ -69,7 +70,7 @@ const ProfileSettings = () => {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:3001/api/auth/profile', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'

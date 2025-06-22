@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import API_BASE_URL from '../config/api';
 
 const Prescriptions = () => {
   const navigate = useNavigate();
@@ -27,7 +28,7 @@ const Prescriptions = () => {
 
   const loadPrescriptions = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/prescriptions', {
+      const response = await fetch(`${API_BASE_URL}/api/prescriptions`, {
         credentials: 'include'
       });
       if (response.ok) {
@@ -48,8 +49,8 @@ const Prescriptions = () => {
     setLoading(true);
     try {
       const url = editMode 
-        ? `http://localhost:3001/api/prescriptions/${editingId}`
-        : 'http://localhost:3001/api/prescriptions';
+        ? `${API_BASE_URL}/api/prescriptions/${editingId}`
+        : `${API_BASE_URL}/api/prescriptions`;
       
       const method = editMode ? 'PUT' : 'POST';
       
@@ -118,7 +119,7 @@ const Prescriptions = () => {
     if (!window.confirm('Are you sure you want to delete this prescription?')) return;
     
     try {
-      const response = await fetch(`http://localhost:3001/api/prescriptions/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/prescriptions/${id}`, {
         method: 'DELETE',
         credentials: 'include'
       });

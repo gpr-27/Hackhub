@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import API_BASE_URL from "../config/api";
 import "./../styles/MTracker.css";
 
 function MTracker() {
@@ -21,7 +22,7 @@ function MTracker() {
     useEffect(() => {
         const fetchMedications = async () => {
             try {
-                const response = await fetch('http://localhost:3001/api/medications', {
+                const response = await fetch(`${API_BASE_URL}/api/medications`, {
                     method: 'GET',
                     credentials: 'include'
                 });
@@ -50,7 +51,7 @@ function MTracker() {
     const addMedication = async () => {
         if (medicine && time && dosage && tillDate) {
             try {
-                const response = await fetch("http://localhost:3001/api/medications", {
+                const response = await fetch(`${API_BASE_URL}/api/medications`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ 
@@ -88,7 +89,7 @@ function MTracker() {
         }
 
         try {
-            const response = await fetch(`http://localhost:3001/api/medications/${currentMedId}`, {
+            const response = await fetch(`${API_BASE_URL}/api/medications/${currentMedId}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ 
@@ -140,7 +141,7 @@ function MTracker() {
         }
         
         try {
-            const response = await fetch(`http://localhost:3001/api/medications/${id}`, {
+            const response = await fetch(`${API_BASE_URL}/api/medications/${id}`, {
                 method: "DELETE",
                 credentials: 'include'
             });

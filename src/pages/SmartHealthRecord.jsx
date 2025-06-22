@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import API_BASE_URL from '../config/api';
 
 const SmartHealthRecord = () => {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ const SmartHealthRecord = () => {
 
   const loadEmergencyContacts = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/emergency-contacts', {
+      const response = await fetch(`${API_BASE_URL}/api/emergency-contacts`, {
         credentials: 'include'
       });
       if (response.ok) {
@@ -43,14 +44,14 @@ const SmartHealthRecord = () => {
     try {
       let response;
       if (editMode) {
-        response = await fetch(`http://localhost:3001/api/emergency-contacts/${editingId}`, {
+        response = await fetch(`${API_BASE_URL}/api/emergency-contacts/${editingId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify(newContact)
         });
       } else {
-        response = await fetch('http://localhost:3001/api/emergency-contacts', {
+        response = await fetch(`${API_BASE_URL}/api/emergency-contacts`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -101,7 +102,7 @@ const SmartHealthRecord = () => {
     if (!window.confirm('Are you sure you want to delete this emergency contact?')) return;
     
     try {
-      const response = await fetch(`http://localhost:3001/api/emergency-contacts/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/emergency-contacts/${id}`, {
         method: 'DELETE',
         credentials: 'include'
       });

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import API_BASE_URL from '../config/api';
 
 const ProtectedRoute = ({ children }) => {
   const location = useLocation();
@@ -10,7 +11,7 @@ const ProtectedRoute = ({ children }) => {
     // Check authentication status with the server
     const checkAuth = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/auth/check', {
+        const response = await fetch(`${API_BASE_URL}/api/auth/check`, {
           method: 'GET',
           credentials: 'include',
         });

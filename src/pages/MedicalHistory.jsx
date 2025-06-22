@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import API_BASE_URL from '../config/api';
 
 const MedicalHistory = () => {
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ const MedicalHistory = () => {
 
   const loadRecords = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/medical-history', {
+      const response = await fetch(`${API_BASE_URL}/api/medical-history`, {
         credentials: 'include'
       });
       if (response.ok) {
@@ -46,8 +47,8 @@ const MedicalHistory = () => {
     setLoading(true);
     try {
       const url = editMode 
-        ? `http://localhost:3001/api/medical-history/${editingId}`
-        : 'http://localhost:3001/api/medical-history';
+        ? `${API_BASE_URL}/api/medical-history/${editingId}`
+        : `${API_BASE_URL}/api/medical-history`;
       
       const method = editMode ? 'PUT' : 'POST';
       
@@ -112,7 +113,7 @@ const MedicalHistory = () => {
     if (!window.confirm('Are you sure you want to delete this record?')) return;
     
     try {
-      const response = await fetch(`http://localhost:3001/api/medical-history/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/medical-history/${id}`, {
         method: 'DELETE',
         credentials: 'include'
       });

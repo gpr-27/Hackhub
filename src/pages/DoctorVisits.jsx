@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import API_BASE_URL from '../config/api';
 
 const DoctorVisits = () => {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ const DoctorVisits = () => {
 
   const loadVisits = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/doctor-visits', {
+      const response = await fetch(`${API_BASE_URL}/api/doctor-visits`, {
         credentials: 'include'
       });
       if (response.ok) {
@@ -55,14 +56,14 @@ const DoctorVisits = () => {
     try {
       let response;
       if (editMode) {
-        response = await fetch(`http://localhost:3001/api/doctor-visits/${editingId}`, {
+        response = await fetch(`${API_BASE_URL}/api/doctor-visits/${editingId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify(formData)
         });
       } else {
-        response = await fetch('http://localhost:3001/api/doctor-visits', {
+        response = await fetch(`${API_BASE_URL}/api/doctor-visits`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -130,7 +131,7 @@ const DoctorVisits = () => {
     if (!window.confirm('Are you sure you want to delete this visit record?')) return;
     
     try {
-      const response = await fetch(`http://localhost:3001/api/doctor-visits/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/doctor-visits/${id}`, {
         method: 'DELETE',
         credentials: 'include'
       });

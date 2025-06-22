@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import "../styles/Dashboard.css";
 import { Link, useNavigate } from "react-router-dom";
+import API_BASE_URL from "../config/api";
 
 const images = [
   'https://blog.apollohomecare.com/uploads/Contributions_of_Doctors_to_Patient_Care_5fe1e0dbcb.png',
@@ -40,7 +41,7 @@ function Dashboard() {
   const checkAuthAndFetchUser = useCallback(async () => {
     try {
       // First check if user is authenticated
-      const authResponse = await fetch('http://localhost:3001/api/auth/check', {
+      const authResponse = await fetch(`${API_BASE_URL}/api/auth/check`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
@@ -60,7 +61,7 @@ function Dashboard() {
       }
 
       // If authenticated, fetch user profile
-      const userResponse = await fetch('http://localhost:3001/api/auth/profile', {
+      const userResponse = await fetch(`${API_BASE_URL}/api/auth/profile`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
@@ -109,7 +110,7 @@ function Dashboard() {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/auth/logout', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import API_BASE_URL from '../config/api';
 
 const VitalSigns = () => {
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ const VitalSigns = () => {
 
   const loadVitals = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/vital-signs', {
+      const response = await fetch(`${API_BASE_URL}/api/vital-signs`, {
         credentials: 'include'
       });
       if (response.ok) {
@@ -51,8 +52,8 @@ const VitalSigns = () => {
     setLoading(true);
     try {
       const url = editMode 
-        ? `http://localhost:3001/api/vital-signs/${editingId}`
-        : 'http://localhost:3001/api/vital-signs';
+        ? `${API_BASE_URL}/api/vital-signs/${editingId}`
+        : `${API_BASE_URL}/api/vital-signs`;
       
       const method = editMode ? 'PUT' : 'POST';
       
@@ -137,7 +138,7 @@ const VitalSigns = () => {
     if (!window.confirm('Are you sure you want to delete this vital signs record?')) return;
     
     try {
-      const response = await fetch(`http://localhost:3001/api/vital-signs/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/vital-signs/${id}`, {
         method: 'DELETE',
         credentials: 'include'
       });

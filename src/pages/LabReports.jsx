@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import API_BASE_URL from '../config/api';
 
 const LabReports = () => {
   const navigate = useNavigate();
@@ -26,7 +27,7 @@ const LabReports = () => {
 
   const loadReports = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/lab-reports', {
+      const response = await fetch(`${API_BASE_URL}/api/lab-reports`, {
         credentials: 'include'
       });
       if (response.ok) {
@@ -47,8 +48,8 @@ const LabReports = () => {
     setLoading(true);
     try {
       const url = editMode 
-        ? `http://localhost:3001/api/lab-reports/${editingId}`
-        : 'http://localhost:3001/api/lab-reports';
+        ? `${API_BASE_URL}/api/lab-reports/${editingId}`
+        : `${API_BASE_URL}/api/lab-reports`;
       
       const method = editMode ? 'PUT' : 'POST';
       
@@ -115,7 +116,7 @@ const LabReports = () => {
     if (!window.confirm('Are you sure you want to delete this lab report?')) return;
     
     try {
-      const response = await fetch(`http://localhost:3001/api/lab-reports/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/lab-reports/${id}`, {
         method: 'DELETE',
         credentials: 'include'
       });

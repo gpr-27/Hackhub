@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import API_BASE_URL from '../config/api';
 
 const HealthRecordProfile = () => {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ const HealthRecordProfile = () => {
 
   const loadProfile = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/health-profile', {
+      const response = await fetch(`${API_BASE_URL}/api/health-profile`, {
         credentials: 'include'
       });
       if (response.ok) {
@@ -82,7 +83,7 @@ const HealthRecordProfile = () => {
         chronicConditions: formData.chronicConditions ? formData.chronicConditions.split(',').map(item => item.trim()) : []
       };
 
-      const response = await fetch('http://localhost:3001/api/health-profile', {
+      const response = await fetch(`${API_BASE_URL}/api/health-profile`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
