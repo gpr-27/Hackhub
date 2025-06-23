@@ -6,6 +6,7 @@ export const makeAuthenticatedRequest = async (url, options = {}) => {
   
   console.log('🔧 makeAuthenticatedRequest called for:', url);
   console.log('🔧 Token from localStorage:', token ? 'Present' : 'Missing');
+  console.log('🔧 API_BASE_URL:', API_BASE_URL);
   
   const defaultHeaders = {
     'Content-Type': 'application/json',
@@ -25,10 +26,12 @@ export const makeAuthenticatedRequest = async (url, options = {}) => {
       ...options.headers,
     },
     credentials: 'include', // Keep for backward compatibility
+    mode: 'cors', // Explicitly set CORS mode
   };
   
   console.log('🔧 Final request options:', {
     method: requestOptions.method || 'GET',
+    url: url,
     headers: requestOptions.headers,
     hasBody: !!requestOptions.body
   });
@@ -36,6 +39,7 @@ export const makeAuthenticatedRequest = async (url, options = {}) => {
   try {
     const response = await fetch(url, requestOptions);
     console.log('🔧 Response status:', response.status);
+    console.log('🔧 Response headers:', Object.fromEntries(response.headers.entries()));
     return response;
   } catch (error) {
     console.error('🔧 Request failed:', error);

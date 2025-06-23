@@ -60,7 +60,7 @@ const ProfileSettings = () => {
     }));
   };
 
-  const handleSaveProfile = async () => {
+  const handleSaveProfile = async (retryCount = 0) => {
     if (!userInfo.name.trim() || !userInfo.email.trim()) {
       setError('Name and email are required');
       return;
@@ -71,21 +71,42 @@ const ProfileSettings = () => {
     setMessage('');
 
     try {
+      console.log('🔄 Attempting to save profile, attempt:', retryCount + 1);
+      
       const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/auth/profile`, {
         method: 'PUT',
         body: JSON.stringify(userInfo)
       });
 
+      console.log('📡 Profile update response status:', response.status);
+
       if (response.ok) {
+        const responseData = await response.json();
+        console.log('✅ Profile updated successfully:', responseData);
         setMessage('Profile updated successfully!');
         setTimeout(() => setMessage(''), 3000);
+      } else if (response.status === 401 && retryCount === 0) {
+        console.log('🔄 Authentication failed, retrying once...');
+        // Authentication failed, retry once (this fixes the double-click issue)
+        setTimeout(() => {
+          handleSaveProfile(1);
+        }, 500);
+        return;
       } else {
         const errorData = await response.json();
+        console.error('❌ Profile update failed:', errorData);
         setError(errorData.error || 'Failed to update profile');
       }
     } catch (error) {
-      console.error('Error updating profile:', error);
-      setError('Failed to update profile');
+      console.error('❌ Error updating profile:', error);
+      if (retryCount === 0) {
+        console.log('🔄 Network error, retrying once...');
+        setTimeout(() => {
+          handleSaveProfile(1);
+        }, 500);
+        return;
+      }
+      setError('Failed to update profile. Please check your connection and try again.');
     } finally {
       setIsSaving(false);
     }
