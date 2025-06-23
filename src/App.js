@@ -19,7 +19,7 @@ import LabReports from './pages/LabReports';
 import DoctorVisits from './pages/DoctorVisits';
 import Prescriptions from './pages/Prescriptions';
 import VitalSigns from './pages/VitalSigns';
-import ProfileSettings from './pages/ProfileSettings';
+
 import Mental from "./pages/mental";
 
 
@@ -108,12 +108,7 @@ function App() {
           </ProtectedRoute>
         } />
         
-        {/* Profile Settings Route */}
-        <Route path="/profile-settings" element={
-          <ProtectedRoute>
-            <ProfileSettings />
-          </ProtectedRoute>
-        } />
+
 
       </Routes>
     </BrowserRouter>

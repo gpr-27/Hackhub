@@ -214,10 +214,7 @@ function Dashboard() {
                   </div>
                 </div>
                 <div className="dropdown-divider"></div>
-                <button className="dropdown-item" onClick={() => navigate('/profile-settings')}>
-                  <span className="dropdown-icon">👤</span>
-                  Profile Settings
-                </button>
+
                 <div className="dropdown-divider"></div>
                 <button className="dropdown-item logout-btn" onClick={handleLogout}>
                   <span className="dropdown-icon">🚪</span>
