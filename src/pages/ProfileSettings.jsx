@@ -70,8 +70,18 @@ const ProfileSettings = () => {
     setError('');
     setMessage('');
 
+    // Check authentication before making request
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      setError('Please login again');
+      navigate('/login');
+      setIsSaving(false);
+      return;
+    }
+
     try {
       console.log('🔄 Attempting to save profile, attempt:', retryCount + 1);
+      console.log('🔑 Token available:', !!token);
       
       const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/auth/profile`, {
         method: 'PUT',
@@ -88,28 +98,30 @@ const ProfileSettings = () => {
       } else if (response.status === 401 && retryCount === 0) {
         console.log('🔄 Authentication failed, retrying once...');
         // Authentication failed, retry once (this fixes the double-click issue)
+        setMessage('Retrying authentication...');
         setTimeout(() => {
           handleSaveProfile(1);
-        }, 500);
+        }, 1000);
         return;
       } else {
         const errorData = await response.json();
         console.error('❌ Profile update failed:', errorData);
         setError(errorData.error || 'Failed to update profile');
       }
-    } catch (error) {
-      console.error('❌ Error updating profile:', error);
-      if (retryCount === 0) {
-        console.log('🔄 Network error, retrying once...');
-        setTimeout(() => {
-          handleSaveProfile(1);
-        }, 500);
-        return;
+          } catch (error) {
+        console.error('❌ Error updating profile:', error);
+        if (retryCount === 0 && (error.name === 'TypeError' || error.message.includes('fetch'))) {
+          console.log('🔄 Network error, retrying once...');
+          setMessage('Network issue, retrying...');
+          setTimeout(() => {
+            handleSaveProfile(1);
+          }, 1000);
+          return;
+        }
+        setError('Failed to update profile. Please check your connection and try again.');
+      } finally {
+        setIsSaving(false);
       }
-      setError('Failed to update profile. Please check your connection and try again.');
-    } finally {
-      setIsSaving(false);
-    }
   };
 
   const handleAvatarUpload = (e) => {
