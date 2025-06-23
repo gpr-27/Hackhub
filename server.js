@@ -22,6 +22,11 @@ app.use(cors({
       'https://mental-health-app-027.netlify.app'
     ];
     
+    // Allow any Netlify subdomain for easier deployment
+    if (origin && origin.includes('.netlify.app')) {
+      return callback(null, true);
+    }
+    
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -144,8 +149,8 @@ app.use(session({
   cookie: {
     maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days in milliseconds
     httpOnly: true,
-    secure: true, // Always true for HTTPS (required for cross-domain)
-    sameSite: 'none', // Required for cross-domain cookies
+    secure: process.env.NODE_ENV === 'production', // Only secure in production
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     domain: undefined // Let browser handle domain automatically
   }
 }));
