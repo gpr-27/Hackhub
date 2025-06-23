@@ -401,15 +401,29 @@ const VitalSignsSchema = new mongoose.Schema({
 });
 const VitalSigns = mongoose.model('VitalSigns', VitalSignsSchema);
 
-// Mood Schema
+// Mood Schema - Updated to match client data
 const MoodSchema = new mongoose.Schema({
   mood: {
     type: Number,
     required: true,
     min: 1,
-    max: 5
+    max: 10  // Updated to support 1-10 scale
+  },
+  intensity: {
+    type: Number,
+    required: true,
+    min: 1,
+    max: 10
   },
   notes: {
+    type: String,
+    default: ''
+  },
+  emotionWords: {
+    type: [String],
+    default: []
+  },
+  aiInsights: {
     type: String,
     default: ''
   },
@@ -417,14 +431,18 @@ const MoodSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  timestamp: {
+    type: Date,
+    default: Date.now
+  },
+  entryNumber: {
+    type: Number,
+    default: 1
+  },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
-  },
-  timestamp: {
-    type: Date,
-    default: Date.now
   }
 });
 const Mood = mongoose.model('Mood', MoodSchema);
@@ -521,20 +539,47 @@ app.get('/api/moods', authenticateUser, async (req, res) => {
 // Add a mood entry
 app.post('/api/moods', authenticateUser, async (req, res) => {
   try {
-    const { mood, notes, date } = req.body;
+    const { 
+      mood, 
+      intensity, 
+      notes, 
+      emotionWords, 
+      aiInsights, 
+      date, 
+      timestamp, 
+      entryNumber 
+    } = req.body;
     const userId = req.user._id;
     
-    if (!mood || !date) {
-      return res.status(400).json({ error: 'Mood and date are required' });
+    if (!mood || !intensity || !date) {
+      return res.status(400).json({ error: 'Mood, intensity, and date are required' });
+    }
+    
+    // Validate mood and intensity ranges
+    if (mood < 1 || mood > 10 || intensity < 1 || intensity > 10) {
+      return res.status(400).json({ error: 'Mood and intensity must be between 1 and 10' });
     }
     
     // Allow multiple mood entries per day - no constraint check needed
     
-    const moodEntry = new Mood({ mood, notes: notes || '', date, userId });
+    const moodEntry = new Mood({ 
+      mood, 
+      intensity,
+      notes: notes || '', 
+      emotionWords: emotionWords || [],
+      aiInsights: aiInsights || '',
+      date, 
+      timestamp: timestamp ? new Date(timestamp) : new Date(),
+      entryNumber: entryNumber || 1,
+      userId 
+    });
+    
     await moodEntry.save();
+    console.log('✅ Mood entry saved successfully:', moodEntry._id);
     res.json(moodEntry);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to add mood entry' });
+    console.error('❌ Error saving mood entry:', err);
+    res.status(500).json({ error: 'Failed to add mood entry', details: err.message });
   }
 });
 
@@ -542,7 +587,7 @@ app.post('/api/moods', authenticateUser, async (req, res) => {
 app.put('/api/moods/:id', authenticateUser, async (req, res) => {
   try {
     const userId = req.user._id;
-    const { mood, notes } = req.body;
+    const { mood, intensity, notes, emotionWords, aiInsights } = req.body;
     
     // Ensure the mood entry belongs to the logged-in user
     const moodEntry = await Mood.findById(req.params.id);
@@ -554,16 +599,29 @@ app.put('/api/moods/:id', authenticateUser, async (req, res) => {
       return res.status(403).json({ error: 'Not authorized to update this mood entry' });
     }
     
-    // Update the mood entry
+    // Validate mood and intensity if provided
+    if ((mood && (mood < 1 || mood > 10)) || (intensity && (intensity < 1 || intensity > 10))) {
+      return res.status(400).json({ error: 'Mood and intensity must be between 1 and 10' });
+    }
+    
+    // Update the mood entry with new fields
+    const updateData = {};
+    if (mood !== undefined) updateData.mood = mood;
+    if (intensity !== undefined) updateData.intensity = intensity;
+    if (notes !== undefined) updateData.notes = notes;
+    if (emotionWords !== undefined) updateData.emotionWords = emotionWords;
+    if (aiInsights !== undefined) updateData.aiInsights = aiInsights;
+    
     const updatedMood = await Mood.findByIdAndUpdate(
       req.params.id, 
-      { mood, notes },
+      updateData,
       { new: true }
     );
     
     res.json(updatedMood);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to update mood entry' });
+    console.error('❌ Error updating mood entry:', err);
+    res.status(500).json({ error: 'Failed to update mood entry', details: err.message });
   }
 });
 
