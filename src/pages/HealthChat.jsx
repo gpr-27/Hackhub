@@ -135,23 +135,32 @@ function HealthChat() {
   // Function to fetch chat history from MongoDB
   const fetchChatHistory = useCallback(async () => {
     try {
-      await checkAuth();
+      const isAuthenticated = await checkAuth();
+      if (!isAuthenticated) {
+        navigate('/login');
+        return;
+      }
       
       const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/chat/messages`, {
         method: 'GET'
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          navigate('/login');
+          return;
+        }
         throw new Error('Failed to fetch chat history');
       }
 
       const data = await response.json();
+      console.log('📥 Fetched chat messages:', data.length, 'messages');
       setMessages(data);
-          } catch (err) {
-        // Error fetching chat history
+    } catch (err) {
+      console.error('❌ Error fetching chat history:', err);
       setMessages([]);
     }
-  }, []);
+  }, [navigate]);
 
   // Function to save a message to MongoDB
   const saveMessage = async (message, sender) => {
@@ -162,12 +171,18 @@ function HealthChat() {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          navigate('/login');
+          return null;
+        }
         throw new Error('Failed to save message');
       }
 
-      return await response.json();
-          } catch (err) {
-        // Error saving message
+      const result = await response.json();
+      console.log('💾 Message saved successfully:', result._id);
+      return result;
+    } catch (err) {
+      console.error('❌ Error saving message:', err);
       return { message, sender, timestamp: new Date() };
     }
   };

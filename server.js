@@ -772,12 +772,12 @@ app.get('/api/auth/check', (req, res) => {
 });
 
 // Get user profile
-app.get('/api/auth/profile', async (req, res) => {
+app.get('/api/auth/profile', authenticateUser, async (req, res) => {
   try {
     // Authentication handled by authenticateUser middleware
     
     // Fetch complete user data
-    const user = await User.findById(req.session.user._id);
+    const user = await User.findById(req.user._id);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -800,7 +800,7 @@ app.get('/api/auth/profile', async (req, res) => {
 });
 
 // Update user profile
-app.put('/api/auth/profile', async (req, res) => {
+app.put('/api/auth/profile', authenticateUser, async (req, res) => {
   try {
     // Authentication handled by authenticateUser middleware
     
@@ -808,7 +808,7 @@ app.put('/api/auth/profile', async (req, res) => {
     
     // Update user in database with IST timestamp
     const updatedUser = await User.findByIdAndUpdate(
-      req.session.user._id,
+      req.user._id,
       {
         name,
         email,
@@ -826,9 +826,11 @@ app.put('/api/auth/profile', async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
     
-    // Update session data
-    req.session.user.name = updatedUser.name;
-    req.session.user.email = updatedUser.email;
+    // Update session data if session exists
+    if (req.session.user) {
+      req.session.user.name = updatedUser.name;
+      req.session.user.email = updatedUser.email;
+    }
     
     res.json({
       message: 'Profile updated successfully',
@@ -865,20 +867,8 @@ app.post('/api/auth/logout', (req, res) => {
 // Get chat history for the logged-in user
 app.get('/api/chat/messages', authenticateUser, async (req, res) => {
   try {
-    // For development purposes, allow access even without authentication
-    let userId;
-    
-    if (req.session.user) {
-      userId = req.user._id;
-    } else {
-      // Find a user to use for demo purposes
-      const demoUser = await User.findOne();
-      if (demoUser) {
-        userId = demoUser._id;
-      } else {
-        return res.status(404).json({ error: 'No users found for demo mode' });
-      }
-    }
+    // Use the authenticated user's ID
+    const userId = req.user._id;
     
     const messages = await ChatMessage.find({ userId })
       .sort({ timestamp: 1 })
@@ -886,6 +876,7 @@ app.get('/api/chat/messages', authenticateUser, async (req, res) => {
     
     res.json(messages);
   } catch (err) {
+    console.error('Error fetching chat messages:', err);
     res.status(500).json({ error: 'Failed to fetch chat messages' });
   }
 });
@@ -893,26 +884,16 @@ app.get('/api/chat/messages', authenticateUser, async (req, res) => {
 // Save a new chat message
 app.post('/api/chat/messages', authenticateUser, async (req, res) => {
   try {
-    // For development purposes, allow saving even without authentication
-    let userId;
-    
-    if (req.session.user) {
-      userId = req.user._id;
-    } else {
-      // Find a user to use for demo purposes
-      const demoUser = await User.findOne();
-      if (demoUser) {
-        userId = demoUser._id;
-      } else {
-        return res.status(404).json({ error: 'No users found for demo mode' });
-      }
-    }
+    // Use the authenticated user's ID
+    const userId = req.user._id;
     
     const { message, sender } = req.body;
     
     if (!message || !sender) {
       return res.status(400).json({ error: 'Message and sender are required' });
     }
+    
+    console.log('💾 Saving chat message for user:', req.user.email, 'User ID:', userId);
     
     const chatMessage = new ChatMessage({
       userId,
@@ -921,8 +902,10 @@ app.post('/api/chat/messages', authenticateUser, async (req, res) => {
     });
     
     const savedMessage = await chatMessage.save();
+    console.log('✅ Chat message saved successfully:', savedMessage._id);
     res.json(savedMessage);
   } catch (err) {
+    console.error('❌ Error saving chat message:', err);
     res.status(500).json({ error: 'Failed to save chat message' });
   }
 });
@@ -932,25 +915,6 @@ app.post('/api/chat/messages', authenticateUser, async (req, res) => {
 // Emergency Contacts APIs
 app.get('/api/emergency-contacts', authenticateUser, async (req, res) => {
   try {
-    if (!req.session.user) {
-      // For demo purposes, create a test user if none exists
-      let testUser = await User.findOne({ email: 'demo@healthapp.com' });
-      if (!testUser) {
-        testUser = new User({
-          name: 'Demo User',
-          email: 'demo@healthapp.com',
-          password: 'demo123'
-        });
-        await testUser.save();
-      }
-      
-      req.session.user = {
-        _id: testUser._id,
-        email: testUser.email,
-        name: testUser.name
-      };
-    }
-    
     const userId = req.user._id;
     const contacts = await EmergencyContact.find({ userId }).sort({ dateAdded: -1 });
     res.json(contacts);
@@ -962,28 +926,6 @@ app.get('/api/emergency-contacts', authenticateUser, async (req, res) => {
 
 app.post('/api/emergency-contacts', authenticateUser, async (req, res) => {
   try {
-    
-    if (!req.session.user) {
-      // For demo purposes, create a test user if none exists
-      let testUser = await User.findOne({ email: 'demo@healthapp.com' });
-      if (!testUser) {
-        testUser = new User({
-          name: 'Demo User',
-          email: 'demo@healthapp.com',
-          password: 'demo123'
-        });
-        await testUser.save();
-        console.log('Created demo user:', testUser);
-      }
-      
-      req.session.user = {
-        _id: testUser._id,
-        email: testUser.email,
-        name: testUser.name
-      };
-      console.log('Using demo user for session');
-    }
-    
     const userId = req.user._id;
     const contact = new EmergencyContact({ ...req.body, userId });
     const savedContact = await contact.save();
