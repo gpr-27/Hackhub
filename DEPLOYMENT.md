@@ -1,104 +1,93 @@
 # Deployment Guide
 
-## Overview
-Your health app consists of two parts:
-1. **Frontend (React)** - Can be deployed to Netlify
-2. **Backend (Express.js + MongoDB)** - Needs to be deployed to a server platform
+The app has two independently deployed pieces:
 
-## Part 1: Deploy Backend Server
+1. **Frontend** (`frontend/`) — static React + Vite build, hosted on Netlify.
+2. **Backend** (`backend/`) — Node/Express API, hosted on a Node platform
+   (Render, Railway, Fly.io, etc.) with a MongoDB database.
 
-### Option A: Deploy to Railway (Recommended)
-1. Go to [Railway.app](https://railway.app)
-2. Sign up/login with GitHub
-3. Click "Deploy from GitHub repo"
-4. Select your repository
-5. Add environment variables:
-   - `MONGODB_CONNECTION_STRING`: Your MongoDB Atlas connection string
-   - `SESSION_SECRET`: A secure random string
-   - `NODE_ENV`: production
-   - `PORT`: 3001
+All configuration comes from environment variables; nothing environment-specific
+is hardcoded. Both apps **fail fast at startup** with a clear error if a required
+variable is missing.
 
-### Option B: Deploy to Render
-1. Go to [Render.com](https://render.com)
-2. Connect your GitHub account
-3. Create a new "Web Service"
-4. Select your repository
-5. Configure:
-   - **Build Command**: `npm install`
-   - **Start Command**: `node server.js`
-   - **Environment Variables**: Same as above
+---
 
-### Option C: Deploy to Heroku
-1. Install Heroku CLI
-2. Run: `heroku create your-app-name`
-3. Set environment variables: `heroku config:set MONGODB_CONNECTION_STRING=your-connection-string`
-4. Deploy: `git push heroku main`
+## 1. Backend (Render / Railway / any Node host)
 
-## Part 2: Deploy Frontend to Netlify
+**Root directory:** `backend`
+**Build command:** `npm install`
+**Start command:** `npm start`
 
-### Prerequisites
-Before deploying to Netlify, you need to:
+Locally, all variables live in a single shared `.env` at the repository root (see
+`.env.example`). In hosted deployments there is no `.env` file — set these
+variables in the platform's dashboard instead. Backend variables (all required
+unless noted):
 
-1. **Update API URLs in all components** (I've started this process)
-2. **Get your backend server URL** from step 1
-3. **Set environment variable** in Netlify
+| Variable | Required | Notes |
+| --- | --- | --- |
+| `NODE_ENV` | yes | `production` |
+| `PORT` | yes | Most hosts inject this automatically |
+| `CLIENT_URL` | yes | Frontend origin (your Netlify URL); always CORS-allowed |
+| `LOG_LEVEL` | yes | `error` \| `warn` \| `info` \| `debug` |
+| `MONGODB_URI` | yes | MongoDB connection string (include a db name, e.g. `/healthcareDB`) |
+| `CLERK_SECRET_KEY` | yes | Clerk secret key (dashboard.clerk.com → API keys) |
+| `CLERK_PUBLISHABLE_KEY` | yes | Clerk publishable key (must match the frontend) |
+| `LLM_PROVIDER` | yes | e.g. `groq` |
+| `GROQ_BASE_URL` | yes | e.g. `https://api.groq.com/openai/v1` |
+| `DEFAULT_MODEL` | yes | Must be one of `AVAILABLE_MODELS` |
+| `AVAILABLE_MODELS` | yes | `id` or `id:Label`, comma-separated |
+| `GROQ_API_KEY` | yes (prod) | Required when `NODE_ENV=production`; else AI uses fallbacks |
+| `CORS_ORIGINS` | no | Comma-separated extra origins |
+| `CORS_ALLOWED_ORIGIN_SUFFIXES` | no | Wildcard host suffixes, e.g. `.netlify.app` |
 
-### Steps:
+> In production the server refuses to start if any required variable is missing,
+> printing a `❌ Missing <VAR>` report and exiting.
 
-1. **Build and test locally**:
-   ```bash
-   npm run build
-   ```
+Note the deployed backend URL (e.g. `https://your-backend.onrender.com`).
 
-2. **Deploy to Netlify**:
-   
-   **Option A: Drag and Drop**
-   - Run `npm run build`
-   - Go to [Netlify.com](https://netlify.com)
-   - Drag the `build` folder to the deploy area
+## 2. Frontend (Netlify)
 
-   **Option B: Connect GitHub (Recommended)**
-   - Go to [Netlify.com](https://netlify.com)
-   - Click "New site from Git"
-   - Connect your GitHub account
-   - Select your repository
-   - Build settings are automatically configured from `netlify.toml`
+`netlify.toml` is already configured:
 
-3. **Set Environment Variables in Netlify**:
-   - Go to Site Settings > Environment Variables
-   - Add: `REACT_APP_API_URL` = `https://your-backend-url.com`
+- **Base directory:** `frontend`
+- **Build command:** `npm run build` (runs `vite build`)
+- **Publish directory:** `frontend/build` (Vite `build.outDir` is set to `build`)
+- **Node version:** 22 (Vite 8 requirement)
+- SPA redirect to `index.html` is included (`public/_redirects`).
 
-## Important Notes
+**Environment variables to set in the Netlify UI** (all required — Vite inlines
+them at build time, so trigger a redeploy after changing any):
 
-### Security Considerations
-- Never commit `.env` files with real credentials
-- Use environment variables for all sensitive data
-- Update CORS settings in your backend to include your Netlify domain
+| Variable | Value |
+| --- | --- |
+| `VITE_API_URL` | The backend URL from step 1 |
+| `VITE_APP_ENV` | `production` |
+| `VITE_CLERK_PUBLISHABLE_KEY` | Clerk publishable key (must match the backend) |
+| `VITE_LLM_PROVIDER` | Must match the backend's `LLM_PROVIDER` |
+| `VITE_DEFAULT_MODEL` | Default model id (one of `VITE_AVAILABLE_MODELS`) |
+| `VITE_AVAILABLE_MODELS` | `id` or `id:Label`, comma-separated (populates the selector) |
 
-### Backend CORS Update Needed
-In your `server.js`, update the CORS origin array to include your Netlify domain:
-```javascript
-origin: [
-  'http://localhost:3000', 
-  'https://your-netlify-app.netlify.app',
-  'https://your-custom-domain.com'
-]
+## 3. Connect the two
+
+1. Set `VITE_API_URL` (and the other `VITE_*` vars) on Netlify to match the backend.
+2. Set the backend's `CLIENT_URL` to the Netlify site URL. To allow preview
+   deploys, add `CORS_ALLOWED_ORIGIN_SUFFIXES=.netlify.app` (and/or list specific
+   origins in `CORS_ORIGINS`).
+3. Redeploy both. Verify the backend health check at
+   `https://your-backend-url/api/health`.
+
+## Local production-style check
+
+```bash
+# Backend
+cd backend && NODE_ENV=production PORT=3001 CLIENT_URL="https://your-site.netlify.app" \
+  LOG_LEVEL=info MONGODB_URI="<uri>" CLERK_SECRET_KEY="<sk>" CLERK_PUBLISHABLE_KEY="<pk>" \
+  LLM_PROVIDER=groq GROQ_BASE_URL="https://api.groq.com/openai/v1" \
+  GROQ_API_KEY="<key>" DEFAULT_MODEL="<model-id>" \
+  AVAILABLE_MODELS="<id1>,<id2>" npm start
+
+# Frontend (these can also live in the single root .env)
+cd frontend && VITE_API_URL="http://localhost:3001" VITE_APP_ENV=production \
+  VITE_CLERK_PUBLISHABLE_KEY="<pk>" VITE_LLM_PROVIDER=groq VITE_DEFAULT_MODEL="<model-id>" \
+  VITE_AVAILABLE_MODELS="<id1>,<id2>" npm run build
 ```
-
-### Database Setup
-Make sure your MongoDB Atlas:
-1. Has the correct connection string
-2. Allows connections from anywhere (0.0.0.0/0) for cloud deployments
-3. Has the proper database user with read/write permissions
-
-## Testing
-1. Test your backend API endpoints independently
-2. Test your frontend with the deployed backend URL
-3. Test all authentication flows
-4. Test all CRUD operations
-
-## Troubleshooting
-- Check Netlify build logs for frontend issues
-- Check your backend service logs for API issues
-- Verify environment variables are set correctly
-- Check browser network tab for CORS errors 
