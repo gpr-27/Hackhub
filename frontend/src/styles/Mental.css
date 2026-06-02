@@ -1,0 +1,443 @@
+/* Mindful Studio — page-specific layout. All colours via design tokens. */
+
+.ms-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+.ms-tabs {
+  display: flex;
+  justify-content: center;
+}
+
+.ms-body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Shared panel ──────────────────────────────────────────────── */
+.ms-panel {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.ms-panel__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.4rem;
+}
+
+.ms-panel__title {
+  font-size: var(--fs-lg);
+  margin: 0;
+}
+
+.ms-panel__sub {
+  margin: 0.25rem 0 0;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+
+.ms-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  justify-content: center;
+}
+
+/* ── Breathe ───────────────────────────────────────────────────── */
+.ms-breathe {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.6rem;
+  padding: 1rem 0 0.5rem;
+}
+
+.ms-breathe__circle {
+  position: relative;
+  width: 230px;
+  height: 230px;
+  border-radius: var(--radius-pill);
+  display: grid;
+  place-items: center;
+  background: var(--gradient-aurora);
+  box-shadow: var(--shadow-glow);
+  transition: transform 4s var(--ease), opacity 4s var(--ease);
+  transform: scale(0.7);
+  opacity: 0.78;
+}
+
+.ms-breathe__circle::after {
+  content: '';
+  position: absolute;
+  inset: -14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-strong);
+  opacity: 0.5;
+}
+
+.ms-breathe__circle.is-running.ms-breathe__circle--expand {
+  transform: scale(1);
+  opacity: 1;
+}
+.ms-breathe__circle.is-running.ms-breathe__circle--full {
+  transform: scale(1);
+  opacity: 1;
+}
+.ms-breathe__circle.is-running.ms-breathe__circle--contract {
+  transform: scale(0.7);
+  opacity: 0.78;
+}
+.ms-breathe__circle.is-running.ms-breathe__circle--empty {
+  transform: scale(0.7);
+  opacity: 0.78;
+}
+
+.ms-breathe__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  color: var(--text-inverse);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.25);
+}
+
+.ms-breathe__phase {
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ms-breathe__count {
+  font-size: var(--fs-3xl);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.ms-breathe__hint {
+  margin: 0;
+  text-align: center;
+  color: var(--text-muted);
+  min-height: 1.4em;
+  max-width: 34ch;
+}
+
+/* ── Meditate ──────────────────────────────────────────────────── */
+.ms-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: center;
+  margin-bottom: 1.6rem;
+}
+
+.ms-preset {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  padding: 0.5rem 1.1rem;
+  border-radius: var(--radius-pill);
+  font: inherit;
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  transition: all var(--dur) var(--ease);
+}
+
+.ms-preset:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.ms-preset.is-active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-sm);
+}
+
+.ms-meditate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.6rem;
+}
+
+.ms-meditate__center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.ms-meditate__time {
+  font-family: var(--font-display);
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.ms-meditate__label {
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-subtle);
+}
+
+/* ── Gratitude ─────────────────────────────────────────────────── */
+.ms-gratitude__form {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.8rem;
+  margin-bottom: 1.4rem;
+}
+
+.ms-gratitude__field {
+  flex: 1;
+  margin: 0;
+}
+
+.ms-gratitude__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.ms-gratitude__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  transition: border-color var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+
+.ms-gratitude__item:hover {
+  border-color: var(--border-strong);
+  transform: translateX(2px);
+}
+
+.ms-gratitude__text {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.ms-gratitude__text p {
+  margin: 0;
+  color: var(--text);
+  word-break: break-word;
+}
+
+.ms-gratitude__quote {
+  color: var(--primary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.ms-gratitude__date {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: var(--fs-xs);
+  color: var(--text-subtle);
+}
+
+/* ── Drawing ───────────────────────────────────────────────────── */
+.ms-draw__controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+  margin-bottom: 1.2rem;
+}
+
+.ms-draw__field {
+  margin: 0;
+}
+
+.ms-draw__color-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.ms-draw__colorpicker {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  cursor: pointer;
+}
+
+.ms-draw__swatches {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.ms-draw__swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--border);
+  cursor: pointer;
+  padding: 0;
+  transition: transform var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+
+.ms-draw__swatch:hover {
+  transform: scale(1.12);
+}
+
+.ms-draw__swatch.is-active {
+  border-color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+.ms-draw__range {
+  width: 100%;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.ms-draw__stage {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--text-inverse);
+  margin-bottom: 1.2rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.ms-draw__canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 5 / 3;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+/* ── Healthy Living ────────────────────────────────────────────── */
+.ms-healthy {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+.ms-affirm {
+  position: relative;
+  text-align: center;
+  overflow: hidden;
+}
+
+.ms-affirm__chip {
+  display: inline-grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius-pill);
+  background: var(--gradient-brand);
+  color: var(--text-inverse);
+  margin-bottom: 0.8rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.ms-affirm__text {
+  margin: 0 auto;
+  max-width: 36ch;
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  line-height: 1.4;
+  color: var(--text);
+  animation: fadeInScale var(--dur-slow) var(--ease);
+}
+
+.ms-affirm__eyebrow {
+  display: block;
+  margin-top: 0.8rem;
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-subtle);
+}
+
+.ms-tip-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1.1rem;
+}
+
+.ms-tip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.ms-tip__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  color: var(--text-inverse);
+}
+
+.ms-tip__icon--info { background: var(--info); }
+.ms-tip__icon--success { background: var(--success); }
+.ms-tip__icon--warning { background: var(--warning); }
+.ms-tip__icon--accent { background: var(--accent); }
+
+.ms-tip__title {
+  margin: 0;
+  font-size: var(--fs-md);
+}
+
+.ms-tip__text {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.55;
+}
+
+/* ── Responsive ────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .ms-draw__controls {
+    grid-template-columns: 1fr;
+  }
+  .ms-gratitude__form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ms-breathe__circle {
+    width: 190px;
+    height: 190px;
+  }
+}
+
+/* Respect reduced motion for the breathing animation. */
+@media (prefers-reduced-motion: reduce) {
+  .ms-breathe__circle {
+    transition: none;
+  }
+  .ms-affirm__text {
+    animation: none;
+  }
+}

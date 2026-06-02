@@ -1,0 +1,236 @@
+/* ============================================================================
+   AppShell — sidebar + topbar layout chrome.
+   ============================================================================ */
+.shell {
+  --sb: var(--sidebar-w);
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: var(--sb) 1fr;
+  transition: grid-template-columns var(--dur) var(--ease);
+}
+.shell--collapsed { --sb: var(--sidebar-w-collapsed); }
+
+/* ---- Sidebar ---- */
+.shell-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.1rem 0.85rem;
+  background: var(--surface);
+  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  border-right: 1px solid var(--border);
+  z-index: 40;
+  overflow: hidden;
+}
+
+.shell-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.5rem 0.55rem 1rem;
+  white-space: nowrap;
+}
+.shell-brand__mark {
+  width: 42px; height: 42px; flex-shrink: 0;
+  border-radius: 13px;
+  background: var(--gradient-brand);
+  display: grid; place-items: center; color: #fff;
+  box-shadow: var(--shadow-glow);
+}
+.shell-brand__text { display: flex; flex-direction: column; line-height: 1.1; overflow: hidden; }
+.shell-brand__text strong { font-family: var(--font-display); font-size: 1.25rem; color: var(--text); letter-spacing: -0.02em; }
+.shell-brand__text small { font-size: 0.7rem; color: var(--text-subtle); letter-spacing: 0.04em; }
+
+.shell-nav { display: flex; flex-direction: column; gap: 0.25rem; flex: 1; }
+.shell-nav__link {
+  position: relative;
+  display: flex; align-items: center; gap: 0.85rem;
+  padding: 0.72rem 0.75rem;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-weight: 600; font-size: var(--fs-base);
+  white-space: nowrap;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease), transform var(--dur-fast) var(--ease);
+}
+.shell-nav__link:hover { background: var(--surface-2); color: var(--text); transform: translateX(2px); }
+.shell-nav__link.is-active { background: var(--primary-soft); color: var(--primary); }
+.shell-nav__icon { display: grid; place-items: center; flex-shrink: 0; width: 24px; }
+.shell-nav__label { overflow: hidden; text-overflow: ellipsis; }
+.shell-nav__indicator {
+  position: absolute; left: -0.85rem; top: 50%; transform: translateY(-50%);
+  width: 4px; height: 22px; border-radius: 0 4px 4px 0; background: var(--gradient-brand);
+}
+
+.shell-sidebar__foot { padding: 0.4rem 0.2rem 0.2rem; }
+.shell-tip {
+  display: flex; gap: 0.6rem; align-items: flex-start;
+  padding: 0.85rem; border-radius: var(--radius-sm);
+  background: var(--accent-soft); color: var(--accent);
+  font-size: var(--fs-xs); line-height: 1.45;
+}
+.shell-tip svg { flex-shrink: 0; margin-top: 1px; }
+.shell-tip p { color: var(--text-muted); }
+
+/* Collapsed (desktop) — icon-only */
+.shell--collapsed .shell-brand__text,
+.shell--collapsed .shell-nav__label,
+.shell--collapsed .shell-tip p { display: none; }
+.shell--collapsed .shell-brand { justify-content: center; padding-left: 0; padding-right: 0; }
+.shell--collapsed .shell-nav__link { justify-content: center; gap: 0; }
+.shell--collapsed .shell-tip { justify-content: center; }
+
+/* ---- Main column ---- */
+.shell-main { display: flex; flex-direction: column; min-width: 0; }
+
+.shell-topbar {
+  position: sticky; top: 0; z-index: 30;
+  height: var(--topbar-h);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 1.4rem;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+}
+.shell-topbar__left { display: flex; align-items: center; gap: 0.7rem; min-width: 0; }
+.shell-topbar__title { display: flex; flex-direction: column; line-height: 1.15; overflow: hidden; }
+.shell-topbar__title strong { font-family: var(--font-display); font-size: 1.1rem; color: var(--text); }
+.shell-topbar__title span { font-size: var(--fs-xs); color: var(--text-subtle); }
+.shell-topbar__right { display: flex; align-items: center; gap: 0.7rem; }
+.shell-username { font-size: var(--fs-sm); font-weight: 600; color: var(--text); }
+@media (max-width: 640px) { .shell-username { display: none; } }
+
+.shell-iconbtn {
+  display: grid; place-items: center;
+  width: 42px; height: 42px; border-radius: var(--radius-sm);
+  color: var(--text-muted); background: transparent;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease), transform var(--dur-fast) var(--ease);
+}
+.shell-iconbtn:hover { background: var(--surface-2); color: var(--text); }
+.shell-iconbtn:active { transform: scale(0.92); }
+.shell-iconbtn--sm { width: 36px; height: 36px; }
+.shell-iconbtn--mobile { display: none; }
+.shell-drawer-close { display: none; }
+
+/* ---- Profile menu ---- */
+.shell-profile { position: relative; }
+.shell-profile__btn {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.35rem 0.6rem 0.35rem 0.35rem; border-radius: var(--radius-pill);
+  border: 1px solid var(--border); background: var(--surface-2);
+  transition: all var(--dur) var(--ease);
+}
+.shell-profile__btn:hover, .shell-profile__btn.is-open { border-color: var(--border-strong); background: var(--surface-hover); }
+.shell-profile__meta { display: flex; flex-direction: column; line-height: 1.15; text-align: left; }
+.shell-profile__name { font-size: var(--fs-sm); font-weight: 700; color: var(--text); max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shell-profile__email { font-size: var(--fs-xs); color: var(--text-subtle); max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shell-profile__chev { color: var(--text-subtle); flex-shrink: 0; }
+
+.shell-avatar {
+  display: grid; place-items: center; border-radius: 50%; flex-shrink: 0;
+  background: var(--gradient-brand); color: #fff; font-weight: 800; overflow: hidden;
+}
+.shell-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.shell-menu {
+  position: absolute; right: 0; top: calc(100% + 0.55rem);
+  width: 270px; padding: 0.5rem;
+  background: var(--surface-solid); border: 1px solid var(--border);
+  border-radius: var(--radius-md); box-shadow: var(--shadow-xl);
+  z-index: 50;
+}
+.shell-menu__head { display: flex; align-items: center; gap: 0.7rem; padding: 0.6rem 0.5rem; }
+.shell-menu__head-text { display: flex; flex-direction: column; min-width: 0; }
+.shell-menu__head-text strong { font-size: var(--fs-base); color: var(--text); }
+.shell-menu__head-text span { font-size: var(--fs-xs); color: var(--text-subtle); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shell-menu__item {
+  display: flex; align-items: center; gap: 0.65rem; width: 100%;
+  padding: 0.7rem 0.6rem; border-radius: var(--radius-xs);
+  color: var(--text-muted); font-weight: 600; font-size: var(--fs-sm);
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.shell-menu__item:hover { background: var(--surface-2); color: var(--text); }
+.shell-menu__item--danger:hover { background: var(--danger-soft); color: var(--danger); }
+
+/* ---- Content ---- */
+.shell-content { flex: 1; padding: 1.8rem 1.4rem 3rem; }
+.shell-content__inner { max-width: var(--container); margin: 0 auto; }
+
+/* ---- Mobile backdrop ---- */
+.shell-backdrop {
+  display: none; position: fixed; inset: 0; z-index: 35;
+  background: rgba(10, 13, 26, 0.5); backdrop-filter: blur(4px);
+  animation: fadeIn var(--dur) var(--ease);
+}
+
+/* ============================================================================
+   Responsive
+   ============================================================================ */
+@media (max-width: 960px) {
+  .shell { grid-template-columns: 1fr; --sb: var(--sidebar-w); }
+  .shell--collapsed { --sb: var(--sidebar-w); }
+  .shell-sidebar {
+    position: fixed; left: 0; top: 0; width: var(--sidebar-w);
+    transform: translateX(-105%);
+    transition: transform var(--dur) var(--ease);
+    box-shadow: var(--shadow-xl);
+  }
+  .shell--mobile-open .shell-sidebar { transform: translateX(0); }
+  .shell--mobile-open .shell-backdrop { display: block; }
+  .shell--collapsed .shell-brand__text,
+  .shell--collapsed .shell-nav__label,
+  .shell--collapsed .shell-tip p { display: revert; }
+  .shell--collapsed .shell-nav__link { justify-content: flex-start; gap: 0.85rem; }
+  .shell-iconbtn--mobile { display: grid; }
+  .shell-iconbtn--desk { display: none; }
+  .shell-profile__meta { display: none; }
+  .shell-content { padding: 1.2rem 1rem 2.5rem; }
+}
+
+@media (max-width: 520px) {
+  .shell-topbar { padding: 0 0.9rem; }
+  .shell-topbar__title strong { font-size: 1rem; }
+}
+
+/* Visible close button anchored to the open mobile drawer's top-right corner. */
+@media (max-width: 960px) {
+  .shell--mobile-open .shell-drawer-close {
+    display: grid;
+    position: fixed;
+    top: 0.85rem;
+    left: calc(var(--sidebar-w) - 3.3rem);
+    z-index: 46;
+    background: var(--surface-solid);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+/* ---- Guest session UI ---- */
+.shell-guest-badge {
+  display: inline-flex; align-items: center;
+  padding: 0.25rem 0.7rem; border-radius: var(--radius-pill);
+  background: var(--accent-soft); color: var(--accent);
+  font-size: var(--fs-xs); font-weight: 700; letter-spacing: 0.02em;
+}
+.shell-guest-banner {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.6rem 1.4rem; flex-wrap: wrap;
+  background: var(--primary-soft); color: var(--text-muted);
+  border-bottom: 1px solid var(--border); font-size: var(--fs-sm);
+}
+.shell-guest-banner svg { color: var(--primary); flex-shrink: 0; }
+.shell-guest-banner strong { color: var(--text); }
+.shell-guest-banner__btn {
+  margin-left: auto; flex-shrink: 0;
+  padding: 0.4rem 0.9rem; border-radius: var(--radius-pill);
+  background: var(--gradient-brand); color: #fff;
+  font-size: var(--fs-xs); font-weight: 700;
+}
+.shell-guest-banner__btn:hover { box-shadow: var(--shadow-glow); }
+@media (max-width: 560px) {
+  .shell-guest-banner { padding: 0.6rem 1rem; }
+  .shell-guest-banner__btn { margin-left: 0; }
+}

@@ -1,0 +1,288 @@
+/* Dashboard page — layout only; colors come from design tokens. Prefix: .dash- */
+
+.dash-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ---- Stats row ---- */
+.dash-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1.1rem;
+}
+
+.dash-stat-skel {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.dash-stat-skel__lines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* ---- Split: hero + recent ---- */
+.dash-split {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 1.5rem;
+  align-items: stretch;
+}
+
+/* ---- Hero ---- */
+.dash-hero {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+}
+.dash-hero__glow {
+  position: absolute;
+  inset: auto -30% -55% auto;
+  width: 360px;
+  height: 360px;
+  background: var(--gradient-aurora);
+  filter: blur(70px);
+  opacity: 0.28;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.dash-hero__body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+.dash-hero__greet {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  align-self: flex-start;
+  padding: 0.35rem 0.8rem;
+  border-radius: var(--radius-pill);
+  background: var(--primary-soft);
+  color: var(--primary-strong);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.dash-hero__title {
+  font-size: var(--fs-2xl);
+  line-height: 1.15;
+  margin: 0;
+}
+.dash-hero__tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+.dash-hero__tip-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+.dash-hero__tip p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+.dash-hero__cta {
+  margin-top: auto;
+}
+
+/* ---- Section headers ---- */
+.dash-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.dash-section-head--bare {
+  margin-bottom: 0.25rem;
+}
+.dash-section-head__title {
+  margin: 0;
+  font-size: var(--fs-lg);
+}
+.dash-section-head__sub {
+  margin: 0.15rem 0 0;
+  font-size: var(--fs-sm);
+}
+
+/* ---- Recent check-ins ---- */
+.dash-recent__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.dash-recent__row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  transition: background var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.dash-recent__row:hover {
+  background: var(--surface-hover);
+  transform: translateX(2px);
+}
+.dash-recent__emoji {
+  font-size: 1.6rem;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+.dash-recent__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.dash-recent__label {
+  font-weight: 600;
+  color: var(--text);
+  font-size: var(--fs-sm);
+}
+.dash-recent__date {
+  font-size: var(--fs-xs);
+}
+
+/* ---- Tools grid ---- */
+.dash-tools {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.1rem;
+  margin-top: 0.9rem;
+}
+.dash-tool {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-decoration: none;
+  color: inherit;
+}
+.dash-tool__icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius-md);
+  transition: transform var(--dur) var(--ease-spring);
+}
+.dash-tool:hover .dash-tool__icon {
+  transform: scale(1.08) rotate(-4deg);
+}
+.dash-tool__icon--primary { background: var(--primary-soft); color: var(--primary); }
+.dash-tool__icon--accent { background: var(--accent-soft); color: var(--accent); }
+.dash-tool__icon--info { background: var(--info-soft); color: var(--info); }
+.dash-tool__icon--success { background: var(--success-soft); color: var(--success); }
+.dash-tool__icon--warning { background: var(--warning-soft); color: var(--warning); }
+.dash-tool__icon--danger { background: var(--danger-soft); color: var(--danger); }
+.dash-tool__text {
+  flex: 1;
+  min-width: 0;
+}
+.dash-tool__title {
+  margin: 0;
+  font-size: var(--fs-md);
+}
+.dash-tool__desc {
+  margin: 0.2rem 0 0;
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+}
+.dash-tool__arrow {
+  flex: 0 0 auto;
+  color: var(--text-subtle);
+  transition: transform var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.dash-tool:hover .dash-tool__arrow {
+  transform: translateX(4px);
+  color: var(--primary);
+}
+
+/* ---- Medications preview ---- */
+.dash-meds__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.dash-meds__row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+.dash-meds__time {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  color: var(--primary-strong);
+}
+.dash-meds__name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 900px) {
+  .dash-split {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 640px) {
+  .dash-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+  .dash-tools {
+    grid-template-columns: 1fr;
+  }
+  .dash-hero__title {
+    font-size: var(--fs-xl);
+  }
+  .dash-section-head {
+    flex-direction: column;
+  }
+}
+@media (max-width: 420px) {
+  .dash-stats {
+    grid-template-columns: 1fr;
+  }
+}
