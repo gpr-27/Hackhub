@@ -1,0 +1,60 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Render Blueprint — ONE web service that runs the whole app.
+#
+# The root Dockerfile builds the React (Vite) SPA and runs the Express API,
+# which serves that SPA from the same origin. So a single Render service hosts
+# both the frontend and the backend at one URL (no CORS, no second service).
+#
+# How to deploy:
+#   1. Push this repo to GitHub.
+#   2. Render Dashboard → New → Blueprint → pick this repo.
+#   3. Render reads this file and prompts for the `sync: false` values below
+#      (your real secrets). Fill them in and apply.
+#
+# Docs: https://render.com/docs/blueprint-spec
+# ─────────────────────────────────────────────────────────────────────────────
+services:
+  - type: web
+    name: aura
+    runtime: docker
+    plan: free            # bump to "starter" to avoid free-tier cold starts
+    region: oregon        # change to your nearest region if you like
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeploy: true
+
+    envVars:
+      # ─── Public config (also injected into the Docker build as build args, so
+      #     the frontend bundle is built with the matching values) ─────────────
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: LLM_PROVIDER
+        value: groq
+      - key: GROQ_BASE_URL
+        value: https://api.groq.com/openai/v1
+      - key: DEFAULT_MODEL
+        value: llama-3.3-70b-versatile
+      - key: AVAILABLE_MODELS
+        value: "llama-3.1-8b-instant:Llama 3.1 8B,llama-3.3-70b-versatile:Llama 3.3 70B,openai/gpt-oss-120b:GPT-OSS 120B,openai/gpt-oss-20b:GPT-OSS 20B,openai/gpt-oss-safeguard-20b:GPT-OSS Safeguard 20B,qwen/qwen3-32b:Qwen 3 32B,groq/compound:Groq Compound,groq/compound-mini:Groq Compound Mini"
+
+      # CLIENT_URL is intentionally omitted — config.js falls back to Render's
+      # auto-injected RENDER_EXTERNAL_URL, so same-origin requests just work.
+      # Add a custom domain? Set CLIENT_URL (or CORS_ORIGINS) to that origin.
+
+      # ─── Secrets — Render prompts for these on first apply; they stay
+      #     RUNTIME-only and never enter an image layer ─────────────────────────
+      - key: MONGODB_URI
+        sync: false                 # MongoDB Atlas connection string (incl. db name)
+      - key: CLERK_SECRET_KEY
+        sync: false                 # Clerk → API keys (sk_…)
+      - key: GROQ_API_KEY
+        sync: false                 # Groq console API key
+
+      # Clerk PUBLISHABLE key (pk_…) — public by design. Used by the backend at
+      # runtime AND baked into the SPA at build time (the Dockerfile maps it to
+      # VITE_CLERK_PUBLISHABLE_KEY), so it lives here once as a single source.
+      - key: CLERK_PUBLISHABLE_KEY
+        sync: false

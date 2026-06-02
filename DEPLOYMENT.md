@@ -1,93 +1,97 @@
-# Deployment Guide
+# Deployment — Render (single service)
 
-The app has two independently deployed pieces:
+The whole app ships as **one Docker image on one Render web service**. The root
+[`Dockerfile`](Dockerfile) builds the React (Vite) SPA and runs the Express API,
+which serves that SPA from the same origin. So there is **one URL, no CORS, and
+no second service** — the frontend and backend are deployed together.
 
-1. **Frontend** (`frontend/`) — static React + Vite build, hosted on Netlify.
-2. **Backend** (`backend/`) — Node/Express API, hosted on a Node platform
-   (Render, Railway, Fly.io, etc.) with a MongoDB database.
-
-All configuration comes from environment variables; nothing environment-specific
-is hardcoded. Both apps **fail fast at startup** with a clear error if a required
-variable is missing.
+Everything is configured by [`render.yaml`](render.yaml) (a Render Blueprint).
 
 ---
 
-## 1. Backend (Render / Railway / any Node host)
+## Prerequisites
 
-**Root directory:** `backend`
-**Build command:** `npm install`
-**Start command:** `npm start`
+You provide three secrets at deploy time:
 
-Locally, all variables live in a single shared `.env` at the repository root (see
-`.env.example`). In hosted deployments there is no `.env` file — set these
-variables in the platform's dashboard instead. Backend variables (all required
-unless noted):
-
-| Variable | Required | Notes |
-| --- | --- | --- |
-| `NODE_ENV` | yes | `production` |
-| `PORT` | yes | Most hosts inject this automatically |
-| `CLIENT_URL` | yes | Frontend origin (your Netlify URL); always CORS-allowed |
-| `LOG_LEVEL` | yes | `error` \| `warn` \| `info` \| `debug` |
-| `MONGODB_URI` | yes | MongoDB connection string (include a db name, e.g. `/healthcareDB`) |
-| `CLERK_SECRET_KEY` | yes | Clerk secret key (dashboard.clerk.com → API keys) |
-| `CLERK_PUBLISHABLE_KEY` | yes | Clerk publishable key (must match the frontend) |
-| `LLM_PROVIDER` | yes | e.g. `groq` |
-| `GROQ_BASE_URL` | yes | e.g. `https://api.groq.com/openai/v1` |
-| `DEFAULT_MODEL` | yes | Must be one of `AVAILABLE_MODELS` |
-| `AVAILABLE_MODELS` | yes | `id` or `id:Label`, comma-separated |
-| `GROQ_API_KEY` | yes (prod) | Required when `NODE_ENV=production`; else AI uses fallbacks |
-| `CORS_ORIGINS` | no | Comma-separated extra origins |
-| `CORS_ALLOWED_ORIGIN_SUFFIXES` | no | Wildcard host suffixes, e.g. `.netlify.app` |
-
-> In production the server refuses to start if any required variable is missing,
-> printing a `❌ Missing <VAR>` report and exiting.
-
-Note the deployed backend URL (e.g. `https://your-backend.onrender.com`).
-
-## 2. Frontend (Netlify)
-
-`netlify.toml` is already configured:
-
-- **Base directory:** `frontend`
-- **Build command:** `npm run build` (runs `vite build`)
-- **Publish directory:** `frontend/build` (Vite `build.outDir` is set to `build`)
-- **Node version:** 22 (Vite 8 requirement)
-- SPA redirect to `index.html` is included (`public/_redirects`).
-
-**Environment variables to set in the Netlify UI** (all required — Vite inlines
-them at build time, so trigger a redeploy after changing any):
-
-| Variable | Value |
+| Secret | Where to get it |
 | --- | --- |
-| `VITE_API_URL` | The backend URL from step 1 |
-| `VITE_APP_ENV` | `production` |
-| `VITE_CLERK_PUBLISHABLE_KEY` | Clerk publishable key (must match the backend) |
-| `VITE_LLM_PROVIDER` | Must match the backend's `LLM_PROVIDER` |
-| `VITE_DEFAULT_MODEL` | Default model id (one of `VITE_AVAILABLE_MODELS`) |
-| `VITE_AVAILABLE_MODELS` | `id` or `id:Label`, comma-separated (populates the selector) |
+| `MONGODB_URI` | [MongoDB Atlas](https://www.mongodb.com/atlas) connection string (include a db name, e.g. `/healthcareDB`) |
+| `CLERK_SECRET_KEY` / `CLERK_PUBLISHABLE_KEY` | [Clerk dashboard](https://dashboard.clerk.com) → API keys |
+| `GROQ_API_KEY` | [Groq console](https://console.groq.com) |
 
-## 3. Connect the two
+> Atlas Network Access must allow Render. The simplest option is to allow
+> `0.0.0.0/0` (Atlas + the Clerk/Groq keys are your real access controls), or add
+> Render's static outbound IPs if you want to lock it down.
 
-1. Set `VITE_API_URL` (and the other `VITE_*` vars) on Netlify to match the backend.
-2. Set the backend's `CLIENT_URL` to the Netlify site URL. To allow preview
-   deploys, add `CORS_ALLOWED_ORIGIN_SUFFIXES=.netlify.app` (and/or list specific
-   origins in `CORS_ORIGINS`).
-3. Redeploy both. Verify the backend health check at
-   `https://your-backend-url/api/health`.
+## Deploy
 
-## Local production-style check
+1. **Push this repo to GitHub** (or GitLab/Bitbucket).
+2. In the **Render Dashboard → New → Blueprint**, select this repository.
+3. Render reads `render.yaml`, creates the `aura` web service, and prompts for the
+   four `sync: false` values: `MONGODB_URI`, `CLERK_SECRET_KEY`,
+   `CLERK_PUBLISHABLE_KEY`, `GROQ_API_KEY`. Paste them in and **Apply**.
+4. Render builds the Docker image and deploys. First build takes a few minutes.
+5. When it's live, open the service URL and check `…/api/health` returns `200`.
+
+That's it. No CORS, no `VITE_API_URL`, no second service to wire up.
+
+## How the single-origin setup works
+
+- **Build time** — Render injects the service's environment variables as Docker
+  build args. The `Dockerfile` maps the public ones (`CLERK_PUBLISHABLE_KEY`,
+  `LLM_PROVIDER`, `DEFAULT_MODEL`, `AVAILABLE_MODELS`) to the `VITE_*` names Vite
+  inlines into the browser bundle. Only **public** values are baked in.
+- **Run time** — the real secrets (`MONGODB_URI`, `CLERK_SECRET_KEY`,
+  `GROQ_API_KEY`) are ordinary runtime env vars; they never enter an image layer.
+- **Same origin** — the SPA calls the API at a relative `/api/...` path (no
+  `VITE_API_URL` needed). The Express server serves both `/api/*` and the SPA
+  (`config.staticDir` → `app.js`), and `CLIENT_URL` falls back to Render's
+  injected `RENDER_EXTERNAL_URL`, so CORS is satisfied automatically.
+
+## Environment variables
+
+Set in `render.yaml` (edit there to change defaults):
+
+| Variable | Set by | Notes |
+| --- | --- | --- |
+| `NODE_ENV` | blueprint | `production` |
+| `LOG_LEVEL` | blueprint | `error` \| `warn` \| `info` \| `debug` |
+| `LLM_PROVIDER` | blueprint | `groq` |
+| `GROQ_BASE_URL` | blueprint | `https://api.groq.com/openai/v1` |
+| `DEFAULT_MODEL` | blueprint | must be one of `AVAILABLE_MODELS` |
+| `AVAILABLE_MODELS` | blueprint | `id` or `id:Label`, comma-separated |
+| `MONGODB_URI` | **you** (`sync: false`) | Atlas connection string |
+| `CLERK_SECRET_KEY` | **you** (`sync: false`) | `sk_…` |
+| `CLERK_PUBLISHABLE_KEY` | **you** (`sync: false`) | `pk_…`; also baked into the SPA |
+| `GROQ_API_KEY` | **you** (`sync: false`) | required in production |
+| `PORT` | Render | injected automatically |
+| `RENDER_EXTERNAL_URL` | Render | injected; used as the CORS origin fallback |
+
+Optional: `CLIENT_URL`, `CORS_ORIGINS`, `CORS_ALLOWED_ORIGIN_SUFFIXES`,
+`TRUST_PROXY_HOPS`, `RATE_LIMIT_WINDOW_MS`, `RATE_LIMIT_MAX`, `BODY_LIMIT`. Set
+`CLIENT_URL` (or `CORS_ORIGINS`) only if you add a **custom domain**.
+
+## Custom domain
+
+Add the domain in the Render service settings, then set `CLIENT_URL` to that
+origin (e.g. `https://app.example.com`) so it is the CORS-allowed origin. Render
+serves it over HTTPS automatically.
+
+## Build and run the image locally (optional)
+
+The image is self-contained. Public build values default in the `Dockerfile`,
+but pass your own to exercise the real frontend:
 
 ```bash
-# Backend
-cd backend && NODE_ENV=production PORT=3001 CLIENT_URL="https://your-site.netlify.app" \
-  LOG_LEVEL=info MONGODB_URI="<uri>" CLERK_SECRET_KEY="<sk>" CLERK_PUBLISHABLE_KEY="<pk>" \
-  LLM_PROVIDER=groq GROQ_BASE_URL="https://api.groq.com/openai/v1" \
-  GROQ_API_KEY="<key>" DEFAULT_MODEL="<model-id>" \
-  AVAILABLE_MODELS="<id1>,<id2>" npm start
+# Build (override the public VITE_* values via build args as needed)
+docker build -t aura \
+  --build-arg CLERK_PUBLISHABLE_KEY="pk_…" \
+  --build-arg DEFAULT_MODEL="llama-3.3-70b-versatile" \
+  --build-arg AVAILABLE_MODELS="llama-3.3-70b-versatile:Llama 3.3 70B" .
 
-# Frontend (these can also live in the single root .env)
-cd frontend && VITE_API_URL="http://localhost:3001" VITE_APP_ENV=production \
-  VITE_CLERK_PUBLISHABLE_KEY="<pk>" VITE_LLM_PROVIDER=groq VITE_DEFAULT_MODEL="<model-id>" \
-  VITE_AVAILABLE_MODELS="<id1>,<id2>" npm run build
+# Run (runtime secrets + PORT come from your root .env)
+docker run --rm -p 3001:3001 --env-file .env aura
+# → http://localhost:3001  (SPA + API on one origin)
 ```
+
+(`npm run docker:build` / `npm run docker:run` wrap the simple forms.)

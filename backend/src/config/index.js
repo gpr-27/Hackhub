@@ -74,7 +74,17 @@ const nodeEnv = requireVar('NODE_ENV');
 const isProduction = nodeEnv === 'production';
 const isTest = nodeEnv === 'test';
 const port = requireInt('PORT');
-const clientUrl = requireVar('CLIENT_URL');
+// CLIENT_URL is the primary CORS-allowed origin (the frontend's URL). In the
+// single-origin deploy the platform's own public URL is exactly right, so we
+// fall back to Render's injected RENDER_EXTERNAL_URL when CLIENT_URL is unset —
+// same-origin requests then pass CORS with no manual configuration.
+const clientUrl =
+  (env.CLIENT_URL && env.CLIENT_URL.trim()) ||
+  (env.RENDER_EXTERNAL_URL && env.RENDER_EXTERNAL_URL.trim()) ||
+  '';
+if (!clientUrl) {
+  errors.push('Missing CLIENT_URL (or RENDER_EXTERNAL_URL)');
+}
 const logLevel = requireVar('LOG_LEVEL');
 
 const LOG_LEVELS = ['error', 'warn', 'info', 'debug'];
@@ -123,6 +133,37 @@ if (isProduction && !groqConfigured) {
 const corsOrigins = parseList(env.CORS_ORIGINS);
 const corsAllowedOriginSuffixes = parseList(env.CORS_ALLOWED_ORIGIN_SUFFIXES);
 
+// ─── Runtime hardening (all OPTIONAL — never fail-fast) ───────────────────────
+// Read directly off process.env with safe defaults so the validator above never
+// flags them, and the test/dev environments need no changes. These tune the
+// behaviour of the app behind a reverse proxy / container orchestrator.
+const parseIntOr = (raw, fallback) => {
+  const n = Number.parseInt(String(raw ?? '').trim(), 10);
+  return Number.isInteger(n) && n >= 0 ? n : fallback;
+};
+
+// Number of trusted reverse-proxy hops in front of the app (for X-Forwarded-*).
+// MUST be a non-negative number, never the string `true`: a permissive
+// `trust proxy: true` is rejected by express-rate-limit (it would let clients
+// spoof their IP). Defaults to 1 in production (a single nginx / load balancer)
+// and 0 otherwise, so a direct (e.g. supertest) connection yields a valid req.ip.
+const trustProxy = parseIntOr(env.TRUST_PROXY_HOPS, isProduction ? 1 : 0);
+
+// API rate limiting, applied to /api. Generous defaults; tune per deployment.
+const rateLimit = {
+  windowMs: parseIntOr(env.RATE_LIMIT_WINDOW_MS, 60_000),
+  max: parseIntOr(env.RATE_LIMIT_MAX, 120),
+};
+
+// Max request body size accepted by the JSON / urlencoded parsers.
+const bodyLimit = String(env.BODY_LIMIT || '10mb').trim();
+
+// Optional: absolute path to a built frontend (index.html + hashed assets) for
+// this process to serve, enabling a single-origin deploy where one server hosts
+// both the API and the SPA (set by the Docker image). Unset → API-only, which
+// is what local dev and the test suite use, so they are unaffected.
+const staticDir = String(env.STATIC_DIR || '').trim() || null;
+
 // ─── Fail fast ────────────────────────────────────────────────────────────────
 if (errors.length) {
   // Printed unconditionally (not through the leveled logger): a fatal
@@ -130,7 +171,11 @@ if (errors.length) {
   /* eslint-disable no-console */
   console.error('\n❌ Invalid configuration — the server cannot start:\n');
   errors.forEach((e) => console.error(`   ❌ ${e}`));
-  console.error('\n   Set the missing values in backend/.env (see backend/.env.example).\n');
+  console.error(
+    '\n   Set the missing values in the environment: the shared root .env for local\n' +
+      '   dev (see .env.example), or the hosting platform environment in production\n' +
+      '   (e.g. the Render service environment / Blueprint — see render.yaml).\n'
+  );
   /* eslint-enable no-console */
   throw new Error(`Invalid configuration: ${errors.join('; ')}`);
 }
@@ -152,6 +197,15 @@ const config = {
 
   corsOrigins,
   corsAllowedOriginSuffixes,
+
+  // Runtime hardening (optional, with safe defaults — see above).
+  trustProxy,
+  rateLimit,
+  bodyLimit,
+
+  // Absolute path to a built frontend to serve from this process, or null when
+  // running API-only (see above). Drives the static/SPA handling in app.js.
+  staticDir,
 
   // Provider-agnostic LLM configuration. Model identifiers and the provider name
   // come entirely from the environment.

@@ -20,6 +20,12 @@ const required = (key: string): string => {
   return String(value).trim();
 };
 
+// Optional var with an empty-string default (the value is trimmed).
+const optional = (key: string): string => {
+  const value = env[key];
+  return value === undefined ? '' : String(value).trim();
+};
+
 // Derive a readable label from a model id when none is supplied,
 // e.g. "llama-3.3-70b-versatile" -> "Llama 3.3 70B Versatile".
 const humanizeModelId = (id: string): string =>
@@ -78,8 +84,12 @@ export interface AppConfig {
 }
 
 export const config: AppConfig = {
+  // VITE_API_URL is OPTIONAL. When unset — the single-origin production deploy,
+  // where the backend serves this very bundle — it defaults to '' so requests
+  // go same-origin against a relative `/api/...` path. For split local dev
+  // (Vite on :5173, API on :3001) set it to the backend origin in the root .env.
   // Trailing slash trimmed so callers can safely template `${apiUrl}/api/...`.
-  apiUrl: required('VITE_API_URL').replace(/\/+$/, ''),
+  apiUrl: optional('VITE_API_URL').replace(/\/+$/, ''),
   appEnv: required('VITE_APP_ENV'),
   llm: {
     provider,
