@@ -1,0 +1,200 @@
+/* SmartHealthRecord — Health Records hub. Page classes prefixed with .shr- */
+
+/* Section heading row (label + action) */
+.shr-section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 2.4rem 0 1.1rem;
+  flex-wrap: wrap;
+}
+.shr-section-head__titles {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+.shr-section-head__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+.shr-section-head h2 {
+  margin: 0;
+  font-size: var(--fs-xl);
+}
+.shr-section-head__sub {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+
+/* Navigation feature grid */
+.shr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.2rem;
+}
+
+/* Each nav card behaves like a link */
+.shr-nav-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  text-decoration: none;
+  color: inherit;
+  height: 100%;
+}
+.shr-nav-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.shr-nav-card__icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
+}
+.shr-nav-card__arrow {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  transition: transform var(--dur) var(--ease), background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.shr-nav-card:hover .shr-nav-card__arrow {
+  background: var(--primary-soft);
+  color: var(--primary);
+  transform: translateX(4px);
+}
+.shr-nav-card__title {
+  margin: 0;
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--text);
+}
+.shr-nav-card__desc {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  flex: 1;
+}
+.shr-nav-card__foot {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.2rem;
+}
+
+/* Emergency contacts */
+.shr-contacts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.1rem;
+}
+.shr-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  height: 100%;
+}
+.shr-contact__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+.shr-contact__id {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+}
+.shr-contact__avatar {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-pill);
+  background: var(--primary-soft);
+  color: var(--primary);
+  flex-shrink: 0;
+}
+.shr-contact__name {
+  margin: 0;
+  font-size: var(--fs-base);
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.shr-contact__rel {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+.shr-contact__phone {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: var(--fs-base);
+  color: var(--primary);
+  text-decoration: none;
+  width: fit-content;
+}
+.shr-contact__phone:hover {
+  text-decoration: underline;
+}
+.shr-contact__actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.4rem;
+}
+
+/* Modal form layout */
+.shr-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.shr-form-grid .shr-span-2 {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 560px) {
+  .shr-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .shr-grid,
+  .shr-contacts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- Mobile responsiveness ---- */
+@media (max-width: 480px) {
+  .shr-grid { grid-template-columns: 1fr; }
+  .shr-contacts-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 380px) {
+  .shr-form-grid { gap: 0.7rem; }
+}

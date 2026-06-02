@@ -1,0 +1,176 @@
+/* HealthRecordProfile — singleton health profile editor. Prefix: .hp- */
+
+/* Back breadcrumb */
+.hp-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 1.25rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  transition: color var(--dur) var(--ease), background var(--dur) var(--ease),
+    border-color var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.hp-back:hover {
+  color: var(--primary);
+  border-color: var(--border-strong);
+  background: var(--surface-hover);
+  transform: translateX(-2px);
+}
+
+/* Form + section stack */
+.hp-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.hp-sections,
+.hp-skeletons {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.hp-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.hp-section__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+}
+.hp-section__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-sm);
+}
+.hp-section__icon--brand { background: var(--gradient-brand); }
+.hp-section__icon--teal { background: var(--gradient-teal); }
+.hp-section__icon--warning { background: var(--gradient-sunset); }
+.hp-section__icon--danger { background: var(--gradient-aurora); }
+
+.hp-section__title {
+  margin: 0;
+  font-size: var(--fs-lg);
+  line-height: 1.2;
+}
+.hp-section__sub {
+  margin: 0.2rem 0 0;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+/* Field grids */
+.hp-grid {
+  display: grid;
+  gap: 1.1rem;
+}
+.hp-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.hp-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+/* Tag input */
+.hp-tagfield {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.hp-tagfield__row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.6rem;
+}
+.hp-tagfield__row > :first-child { flex: 1 1 auto; min-width: 0; }
+
+.hp-chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+.hp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.hp-chip__remove {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin: 0 -0.15rem 0 0.1rem;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.hp-chip__remove:hover { opacity: 1; background: rgba(0, 0, 0, 0.12); }
+.hp-chip__remove:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+  opacity: 1;
+}
+
+/* Save bar */
+.hp-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding-top: 0.25rem;
+}
+.hp-actions__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-right: auto;
+  font-size: var(--fs-sm);
+  color: var(--text-subtle);
+}
+
+/* Skeleton layout */
+.hp-skel-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 860px) {
+  .hp-grid--3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hp-skel-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+  .hp-grid--2,
+  .hp-grid--3,
+  .hp-skel-grid { grid-template-columns: 1fr; }
+  .hp-tagfield__row { flex-direction: column; }
+  .hp-actions { justify-content: stretch; }
+  .hp-actions__meta { margin-right: 0; }
+}
+
+/* ---- Mobile responsiveness: single-column forms/skeletons on phones ---- */
+@media (max-width: 640px) {
+  .hp-skel-grid { grid-template-columns: 1fr; }
+  .hp-grid--2 { grid-template-columns: 1fr; }
+  .hp-grid--3 { grid-template-columns: 1fr; }
+}
