@@ -1,100 +1,139 @@
-# Mental Health Care Application
+# Aura — Mental Wellness
 
-This is a comprehensive mental health care application built with React and Node.js, featuring AI-powered chat, mood tracking, and medication management.
+A full-stack mental wellness companion with a polished, modern UI: mood tracking
+with AI reflections, an empathetic AI wellness chat (powered by **Groq**), a
+mindful studio (breathing, meditation, gratitude, drawing), medication reminders,
+and a complete smart health record.
 
-## Environment Setup
+- **Frontend** — React 19 + **Vite** in [`frontend/`](frontend); the dev server runs on Vite's default port (**5173**).
+- **Backend** — Express + MongoDB API in [`backend/`](backend); the port comes from `PORT` (e.g. **3001**).
 
-### Prerequisites
-- Node.js and npm installed
-- MongoDB Atlas account
-- Google Gemini AI API key
+All configuration is environment-driven — there are no environment-specific
+values (URLs, ports, model names, provider names, keys) hardcoded in the source.
+The backend reads everything through [`backend/src/config/index.js`](backend/src/config/index.js)
+and the frontend through [`frontend/src/config/index.ts`](frontend/src/config/index.ts);
+both validate their required variables at startup and fail fast with a clear error.
 
-### Environment Variables
-Create a `.env` file in the root directory with the following variables:
+## Features
 
-```bash
-# Copy .env.example to .env and fill in your values
-cp .env.example .env
+- 🏠 **Dashboard** — personalized greeting, wellness stats, mood sparkline, quick actions.
+- ❤️ **Mood Tracker** — 1–10 mood + intensity + emotion chips + notes, AI-generated
+  reflections (Groq), trend charts, and an editable history.
+- 💬 **Wellness Chat** — empathetic AI chat with therapy / meditation / wellness /
+  crisis modes, persisted history, and a crisis-support banner.
+- ✨ **Mindful Studio** — animated box-breathing, a meditation timer, a gratitude
+  journal, a creative drawing canvas, and healthy-living tips (all client-side).
+- 💊 **Medications** — schedule, dosage, reminders/chime, and a daily adherence ring.
+- 🗂️ **Smart Health Records** — health profile, medical history, lab reports, doctor
+  visits, prescriptions, vital-sign charts, and emergency contacts.
+
+## Design system
+
+The frontend is built on a token-based design system (**AURA**) with full
+**light/dark theming**, a reusable UI kit, a shared `AppShell` (sidebar + topbar),
+toasts, and smooth motion. See [`frontend/DESIGN_SYSTEM.md`](frontend/DESIGN_SYSTEM.md)
+for tokens, component APIs, and conventions. Icons use `lucide-react`; charts use
+`recharts`.
+
+```
+.
+├── frontend/        # React app (UI)
+│   ├── public/
+│   ├── src/
+│   └── package.json
+├── backend/         # Express + MongoDB API
+│   ├── src/
+│   │   ├── config/      # centralized config (index.js) + logger + db + time
+│   │   ├── models/      # mongoose schemas
+│   │   ├── middleware/  # Clerk session verification (auth guard)
+│   │   ├── routes/      # API endpoints by domain
+│   │   └── services/    # Groq AI client + password hashing
+│   ├── tests/           # supertest + in-memory MongoDB
+│   └── package.json
+├── package.json     # root orchestrator (runs both apps together)
+└── netlify.toml     # frontend deploy config
 ```
 
-Required environment variables:
-- `REACT_APP_GEMINI_API_KEY`: Your Google Gemini AI API key
-- `MONGODB_CONNECTION_STRING`: Your MongoDB Atlas connection string
-- `SESSION_SECRET`: A secure secret for session management
-- `NODE_ENV`: Set to 'development' or 'production'
+## Prerequisites
 
-### Getting Started
+- Node.js 18+ and npm
+- A MongoDB database — either a [MongoDB Atlas](https://www.mongodb.com/atlas) connection
+  string, **or** use the built-in in-memory database for local development.
+- A [Groq API key](https://console.groq.com) (optional — the app uses safe
+  fallback responses until one is provided).
+- A [Clerk application](https://dashboard.clerk.com) (free) for authentication —
+  you'll need its publishable key and secret key.
 
-1. Clone the repository
-2. Install dependencies: `npm install`
-3. Set up environment variables (see above)
-4. Start the backend server: `node server.js`
-5. In a new terminal, start the React app: `npm start`
+## Setup
 
-## Available Scripts
+1. Install dependencies for the root, backend, and frontend:
 
-In the project directory, you can run:
+   ```bash
+   npm run install:all
+   ```
 
-### `npm start`
+2. Configure environment variables. There is a **single shared `.env` at the
+   repository root** used by both the backend (via dotenv) and the frontend (via
+   Vite's `envDir`). Only `VITE_`-prefixed vars reach the browser, so the backend
+   secrets in the same file never leak to the client.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+   ```bash
+   cp .env.example .env
+   ```
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+   Every variable in `.env.example` is required at startup. Key ones to set:
+   - `MONGODB_URI` — your connection string (leave blank to use the in-memory DB
+     via `npm run dev:memory`).
+   - `GROQ_API_KEY` — your key from https://console.groq.com (required only in
+     production; otherwise the app uses built-in fallback replies).
+   - `CLERK_SECRET_KEY` / `CLERK_PUBLISHABLE_KEY` / `VITE_CLERK_PUBLISHABLE_KEY`
+     — from your Clerk dashboard (https://dashboard.clerk.com → API keys). The two
+     publishable keys must be identical. Authentication is managed by Clerk.
+   - `CLIENT_URL` — the frontend origin (e.g. `http://localhost:5173`).
+   - `DEFAULT_MODEL` / `AVAILABLE_MODELS` (+ `VITE_*` mirrors) — the model and the
+     selectable model list that populates the in-app selector.
 
-### `npm test`
+## Running locally
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+**Option A — with the in-memory database (no MongoDB account needed):**
 
-### `npm run build`
+```bash
+npm run dev:memory
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+**Option B — against your own MongoDB** (set `MONGODB_CONNECTION_STRING` first):
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```bash
+npm run dev
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Both commands start the backend (port from `PORT`, e.g. http://localhost:3001)
+and the Vite frontend (http://localhost:5173) together. You can also run them
+separately with `npm run start:backend` and `npm run start:frontend`.
 
-### `npm run eject`
+## Tests
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+End-to-end backend tests run against an in-memory MongoDB (no external services):
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+npm test
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## How the AI works
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+The frontend never talks to Groq directly. Health Chat and the Mood Tracker call
+the backend endpoint `POST /api/ai/chat`, which calls Groq server-side. This keeps
+the API key secret and avoids browser CORS restrictions. When no key is
+configured, the endpoint returns friendly built-in fallback responses so the app
+keeps working without errors. The provider and models are configured entirely via
+the environment — `LLM_PROVIDER`, `DEFAULT_MODEL` and the `AVAILABLE_MODELS` list
+(mirrored on the frontend by `VITE_AVAILABLE_MODELS`, which populates the in-app
+model selector). No model or provider names are hardcoded in the source, and the
+chosen model is validated server-side against `AVAILABLE_MODELS`.
 
-## Learn More
+## Deployment
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
-#blaaaa
+See [DEPLOYMENT.md](DEPLOYMENT.md). In short: deploy `frontend/` to Netlify (config
+in `netlify.toml`) and `backend/` to a Node host (Render/Railway/etc.), then set
+the `VITE_*` variables (including `VITE_API_URL` → the backend's URL) in the
+Netlify UI and the backend variables on your Node host.
