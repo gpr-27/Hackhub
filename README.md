@@ -51,7 +51,8 @@ for tokens, component APIs, and conventions. Icons use `lucide-react`; charts us
 │   ├── tests/           # supertest + in-memory MongoDB
 │   └── package.json
 ├── package.json     # root orchestrator (runs both apps together)
-└── netlify.toml     # frontend deploy config
+├── Dockerfile       # single production image: builds the SPA, Express serves it
+└── render.yaml      # Render Blueprint — one web service for frontend + backend
 ```
 
 ## Prerequisites
@@ -133,7 +134,11 @@ chosen model is validated server-side against `AVAILABLE_MODELS`.
 
 ## Deployment
 
-See [DEPLOYMENT.md](DEPLOYMENT.md). In short: deploy `frontend/` to Netlify (config
-in `netlify.toml`) and `backend/` to a Node host (Render/Railway/etc.), then set
-the `VITE_*` variables (including `VITE_API_URL` → the backend's URL) in the
-Netlify UI and the backend variables on your Node host.
+The whole app deploys as **one Docker image on a single Render web service**: the
+root [`Dockerfile`](Dockerfile) builds the SPA and the Express API serves it from
+the same origin (one URL, no CORS). Connect the repo as a Render **Blueprint**
+([`render.yaml`](render.yaml)) and fill in the four secrets it prompts for
+(`MONGODB_URI`, `CLERK_SECRET_KEY`, `CLERK_PUBLISHABLE_KEY`, `GROQ_API_KEY`).
+
+See **[DEPLOYMENT.md](DEPLOYMENT.md)** for the full walkthrough (including building
+and running the image locally).

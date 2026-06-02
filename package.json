@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "description": "Aura — Mental Wellness: React frontend + Express/MongoDB backend with Groq AI.",
+  "engines": {
+    "node": ">=22.12"
+  },
   "scripts": {
     "install:all": "npm install && npm --prefix backend install && npm --prefix frontend install",
     "dev": "concurrently -n backend,frontend -c blue,green \"npm --prefix backend run dev\" \"npm --prefix frontend start\"",
@@ -10,7 +13,9 @@
     "start:backend": "npm --prefix backend start",
     "start:frontend": "npm --prefix frontend start",
     "build": "npm --prefix frontend run build",
-    "test": "npm --prefix backend test"
+    "test": "npm --prefix backend test",
+    "docker:build": "docker build -t aura .",
+    "docker:run": "docker run --rm -p 3001:3001 --env-file .env aura"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

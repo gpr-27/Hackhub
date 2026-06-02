@@ -1,0 +1,42 @@
+# Build context = repository root (the single root Dockerfile copies ./frontend
+# and ./backend itself). Keep the context small and, above all, NEVER copy the
+# working-tree .env — it holds live secrets that must not enter an image layer.
+.env
+.env.*
+!.env.example
+
+# Dependencies — reinstalled in-image via `npm ci`.
+node_modules
+**/node_modules
+
+# Build output — the frontend is rebuilt inside the image.
+build
+**/build
+dist
+**/dist
+
+# Tests / coverage / CI artifacts
+**/coverage
+
+# VCS / editor / agent / OS noise
+.git
+.gitignore
+.github
+.claude
+.vscode
+.idea
+**/.DS_Store
+*.swp
+*.swo
+
+# Docs & local-only files (not needed at runtime)
+*.md
+**/*.md
+*.log
+**/*.log
+cookies.txt
+.netlify
+
+# The Docker / ignore files themselves
+Dockerfile
+.dockerignore

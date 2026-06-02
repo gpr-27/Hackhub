@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "description": "React (Vite) frontend for the Aura Mental Wellness app.",
+  "engines": {
+    "node": ">=22.12"
+  },
   "dependencies": {
     "@clerk/react": "^6.7.2",
     "lucide-react": "^1.17.0",
