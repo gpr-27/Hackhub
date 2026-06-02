@@ -1,0 +1,26 @@
+{
+  "name": "mental-health-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Express + MongoDB API for the Aura Mental Wellness app (Clerk auth, health records, mood, Groq AI).",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "dev:memory": "node scripts/start-with-memory-db.js",
+    "test": "jest --runInBand --forceExit"
+  },
+  "dependencies": {
+    "@clerk/express": "^2.1.22",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2",
+    "mongoose": "^8.16.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "mongodb-memory-server": "^10.1.4",
+    "nodemon": "^3.1.10",
+    "supertest": "^7.1.1"
+  }
+}
