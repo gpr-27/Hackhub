@@ -10,7 +10,11 @@
 // backend/). Resolved from this file's location so it works regardless of the
 // process working directory. In hosted deployments (no .env file) this loads
 // nothing and the platform-provided environment variables are used.
-require('dotenv').config({ path: require('path').resolve(__dirname, '../../../.env') });
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../../../.env') });
+
+// Repository root (one level above backend/), resolved from this file's location.
+const repoRoot = path.resolve(__dirname, '../../..');
 
 const env = process.env;
 
@@ -101,6 +105,46 @@ const mongoUri = requireVar('MONGODB_URI');
 const clerkSecretKey = requireVar('CLERK_SECRET_KEY');
 const clerkPublishableKey = requireVar('CLERK_PUBLISHABLE_KEY');
 
+// Structurally validate the Clerk keys so a malformed value fails fast HERE, at
+// startup, with a clear message — instead of letting @clerk/express throw
+// "Publishable key not valid." on EVERY request at runtime. That global
+// middleware runs before all routes, so a bad key 500s the health check, the
+// public endpoints, anonymous guest mode and the SPA alike — i.e. it would make
+// Render's health-check fail and silently kill the deploy with an opaque error.
+// Skipped under test, where @clerk/express is mocked and the suite intentionally
+// uses non-structural placeholder keys.
+if (!isTest) {
+  // Mirrors @clerk/shared's isPublishableKey: "pk_(test|live)_" followed by the
+  // base64 of "<frontend-api-host>$" (host must contain a "." and no extra "$").
+  const isValidClerkPublishableKey = (key) => {
+    if (!/^pk_(test|live)_/.test(key)) return false;
+    const parts = key.split('_');
+    if (parts.length !== 3 || !parts[2]) return false;
+    let decoded;
+    try {
+      decoded = Buffer.from(parts[2], 'base64').toString('utf8');
+    } catch {
+      return false;
+    }
+    if (!decoded.endsWith('$')) return false;
+    const host = decoded.slice(0, -1);
+    return !host.includes('$') && host.includes('.');
+  };
+
+  if (clerkPublishableKey && !isValidClerkPublishableKey(clerkPublishableKey)) {
+    errors.push(
+      'CLERK_PUBLISHABLE_KEY is not a valid Clerk publishable key (expected a "pk_test_…" or ' +
+        '"pk_live_…" value from the Clerk dashboard → API keys, not a placeholder)'
+    );
+  }
+  if (clerkSecretKey && !/^sk_(test|live)_.+/.test(clerkSecretKey)) {
+    errors.push(
+      'CLERK_SECRET_KEY is not a valid Clerk secret key (expected an "sk_test_…" or "sk_live_…" ' +
+        'value from the Clerk dashboard → API keys, not a placeholder)'
+    );
+  }
+}
+
 // ─── LLM / Provider ─────────────────────────────────────────────────────────
 const llmProvider = requireVar('LLM_PROVIDER');
 const groqBaseUrl = requireVar('GROQ_BASE_URL');
@@ -158,11 +202,19 @@ const rateLimit = {
 // Max request body size accepted by the JSON / urlencoded parsers.
 const bodyLimit = String(env.BODY_LIMIT || '10mb').trim();
 
-// Optional: absolute path to a built frontend (index.html + hashed assets) for
-// this process to serve, enabling a single-origin deploy where one server hosts
-// both the API and the SPA (set by the Docker image). Unset → API-only, which
-// is what local dev and the test suite use, so they are unaffected.
-const staticDir = String(env.STATIC_DIR || '').trim() || null;
+// Optional: path to a built frontend (index.html + hashed assets) for this
+// process to serve, enabling a single-origin deploy where one server hosts both
+// the API and the SPA. An ABSOLUTE path is used as-is (the Docker image sets
+// /app/public); a RELATIVE path is resolved from the repository root, so a
+// native (non-Docker) host — e.g. a Render Node service — can simply set
+// STATIC_DIR=frontend/build regardless of the absolute checkout location. Unset
+// → API-only, which is what local dev and the test suite use (unaffected).
+const rawStaticDir = String(env.STATIC_DIR || '').trim();
+const staticDir = rawStaticDir
+  ? path.isAbsolute(rawStaticDir)
+    ? rawStaticDir
+    : path.resolve(repoRoot, rawStaticDir)
+  : null;
 
 // ─── Fail fast ────────────────────────────────────────────────────────────────
 if (errors.length) {

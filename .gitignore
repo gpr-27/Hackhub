@@ -13,6 +13,9 @@ dist/
 .env.*.local
 **/.env
 **/.env.local
+# Filled-in secrets to paste into Render (template lives in the repo history, but
+# never commit a copy containing real values).
+render-upload.env
 
 # Logs
 *.log

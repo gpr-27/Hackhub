@@ -4,6 +4,8 @@
 .env
 .env.*
 !.env.example
+# The filled-in Render secrets file (paste-into-Render template) — never into an image.
+render-upload.env
 
 # Dependencies — reinstalled in-image via `npm ci`.
 node_modules
