@@ -2,6 +2,7 @@
    Landing page
    ============================================================================ */
 .lp { overflow-x: hidden; }
+.lp img, .lp svg, .lp video, .lp canvas { max-width: 100%; }
 .lp-eyebrow { font-size: var(--fs-xs); font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--primary); }
 
 /* ---- Nav ---- */
@@ -23,8 +24,9 @@
 /* ---- Hero ---- */
 .lp-hero { padding: 3.5rem 0 5rem; }
 .lp-hero__inner { display: grid; grid-template-columns: 1.05fr 1fr; gap: 3rem; align-items: center; padding: 0 1.2rem; }
+.lp-hero__copy { min-width: 0; }
 .lp-pill { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.9rem; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary); font-size: var(--fs-xs); font-weight: 700; margin-bottom: 1.3rem; }
-.lp-hero__title { font-size: var(--fs-3xl); line-height: 1.08; margin-bottom: 1.1rem; }
+.lp-hero__title { font-size: clamp(2rem, 6vw + 0.5rem, var(--fs-3xl)); line-height: 1.08; margin-bottom: 1.1rem; }
 .lp-hero__lead { font-size: 1.15rem; color: var(--text-muted); line-height: 1.6; max-width: 52ch; margin-bottom: 1.8rem; }
 .lp-hero__cta { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 1.6rem; }
 .lp-hero__trust { list-style: none; display: flex; gap: 1.3rem; flex-wrap: wrap; color: var(--text-muted); font-size: var(--fs-sm); font-weight: 600; }
@@ -83,6 +85,7 @@
 /* ---- AI band ---- */
 .lp-ai { padding: 2rem 0 4rem; }
 .lp-ai__inner { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; align-items: center; padding: 2.6rem; border-radius: var(--radius-xl); margin: 0 1.2rem; }
+.lp-ai__copy, .lp-ai__chat { min-width: 0; }
 .lp-ai__copy h2 { font-size: var(--fs-2xl); color: var(--text); margin: 0.5rem 0 0.8rem; }
 .lp-ai__copy p { color: var(--text-muted); line-height: 1.6; margin-bottom: 1.5rem; }
 .lp-ai__chat { display: flex; flex-direction: column; gap: 0.8rem; }
@@ -101,6 +104,7 @@
 /* ---- Footer ---- */
 .lp-footer { border-top: 1px solid var(--border); padding: 2rem 0; }
 .lp-footer__inner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding: 0 1.2rem; }
+.lp-footer__inner > p { min-width: 0; }
 .lp-footer__links { display: flex; gap: 1.3rem; }
 .lp-footer__links a { color: var(--text-muted); font-weight: 600; font-size: var(--fs-sm); }
 .lp-footer__links a:hover { color: var(--primary); }
@@ -113,18 +117,41 @@
   .lp-features, .lp-steps { grid-template-columns: 1fr 1fr; }
   .lp-stats { grid-template-columns: repeat(2, 1fr); }
 }
+@media (max-width: 768px) {
+  /* AI band: side-by-side copy/chat stacks; reduce padding so the glass card fits. */
+  .lp-ai__inner { padding: 1.8rem; }
+  .lp-footer__inner { justify-content: center; text-align: center; }
+}
 @media (max-width: 600px) {
   .lp-features, .lp-steps, .lp-stats { grid-template-columns: 1fr; }
   .lp-stats { gap: 1.4rem; }
-  .lp-hero__title { font-size: 2.3rem; }
   /* Long CTA labels must wrap instead of overflowing their card on phones. */
   .lp-cta__card { padding: 2.5rem 1.2rem; }
   .lp-cta__card .ui-btn,
   .lp-hero__cta .ui-btn { white-space: normal; max-width: 100%; }
+  /* Touch targets >=40px on phones. */
+  .lp-nav__links a, .lp-signin, .lp-footer__links a { min-height: 40px; display: inline-flex; align-items: center; }
+  /* Keep mockups within the viewport (no negative offsets pushing width). */
+  .lp-mock--chat { left: 0; max-width: min(260px, 100%); }
+  .lp-mock--breathe { right: 0; }
+  .lp-section { padding-top: 3rem; padding-bottom: 3rem; }
+  .lp-footer__inner { flex-direction: column; }
+  .lp-footer__links { flex-wrap: wrap; justify-content: center; }
 }
 @media (max-width: 440px) {
   .lp-nav__actions { gap: 0.5rem; }
   .lp-nav .lp-signin { display: none; }
+  .lp-nav__inner { padding-left: 1rem; padding-right: 1rem; }
   .lp-section, .lp-cta { padding-left: 1rem; padding-right: 1rem; }
   .lp-hero__inner, .lp-ai__inner, .lp-stats { padding-left: 1rem; padding-right: 1rem; }
+}
+@media (max-width: 400px) {
+  /* Smallest phones: trim padding further and shrink oversized hero mockup type. */
+  .lp-hero { padding: 2.5rem 0 3.5rem; }
+  .lp-section, .lp-cta { padding-left: 0.75rem; padding-right: 0.75rem; }
+  .lp-hero__inner, .lp-ai__inner, .lp-stats { padding-left: 0.75rem; padding-right: 0.75rem; }
+  .lp-ai__inner { padding: 1.4rem; margin-left: 0.75rem; margin-right: 0.75rem; }
+  .lp-stat strong { font-size: 2rem; }
+  .lp-hero__cta { gap: 0.6rem; }
+  .lp-hero__cta .ui-btn { width: 100%; }
 }

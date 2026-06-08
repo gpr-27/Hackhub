@@ -9,7 +9,7 @@
 /* ---- Stats row ---- */
 .med-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr));
   gap: 1.1rem;
 }
 
@@ -34,6 +34,7 @@
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1.25rem;
+  flex-wrap: wrap;
 }
 
 .med-section-head--stack {
@@ -48,9 +49,10 @@
 }
 
 .med-section-head__title h2 {
-  font-size: var(--fs-lg);
+  font-size: clamp(1.05rem, 3.5vw, var(--fs-lg));
   margin: 0;
   line-height: 1.2;
+  word-break: break-word;
 }
 
 .med-section-head__title .muted {
@@ -193,7 +195,7 @@
 /* ---- All medications grid ---- */
 .med-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
   gap: 1rem;
 }
 

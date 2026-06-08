@@ -1,3 +1,27 @@
 /* Global entry — load the AURA design system, then component styles. */
 @import './styles/theme.css';
 @import './styles/ui.css';
+
+/* ============================================================================
+   Global responsive safety net (foundation layer)
+   theme.css already sets: `* { box-sizing: border-box }`, `body { overflow-x: clip }`,
+   `img { max-width: 100% }`, and unwidthed html/body/#root. We add ONLY what's
+   missing, without duplicating those rules.
+   ============================================================================ */
+
+/* `*` does not match pseudo-elements, so extend border-box to ::before/::after
+   to keep padded decorations from forcing overflow. */
+*::before,
+*::after { box-sizing: border-box; }
+
+/* Guard horizontal overflow on the ROOT scroll container too. `clip` (not
+   `hidden`) avoids creating a scroll context that would break position:sticky. */
+html { overflow-x: clip; }
+
+/* Fluid media never overflows its container. `height: auto` is applied only to
+   raster/replaced media that should scale by aspect ratio — NOT to `svg`, whose
+   explicit width/height drives the many fixed-size inline icons in the UI. */
+img,
+video,
+canvas { max-width: 100%; height: auto; }
+svg { max-width: 100%; }
