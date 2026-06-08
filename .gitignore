@@ -13,8 +13,8 @@ dist/
 .env.*.local
 **/.env
 **/.env.local
-# NOTE: render-upload.env is intentionally committed as a PLACEHOLDER template
-# (no real secrets). Put real values in Render's dashboard, not in this file.
+# Local secrets sheet you paste into Render's Blueprint prompts — never commit.
+render-upload.env
 
 # Logs
 *.log
