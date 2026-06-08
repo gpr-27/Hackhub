@@ -71,7 +71,7 @@
   font-weight: 600;
 }
 .dash-hero__title {
-  font-size: var(--fs-2xl);
+  font-size: clamp(1.5rem, 4vw + 0.5rem, var(--fs-2xl));
   line-height: 1.15;
   margin: 0;
 }
@@ -262,9 +262,28 @@
 }
 
 /* ---- Responsive ---- */
+@media (max-width: 1024px) {
+  .dash-split {
+    gap: 1.25rem;
+  }
+  .dash-tools {
+    /* Avoid 260px min forcing two cramped columns on narrow tablets. */
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+}
 @media (max-width: 900px) {
   .dash-split {
     grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 768px) {
+  .dash-page {
+    gap: 1.25rem;
+  }
+  /* Glow can spill via blur on small screens; keep it contained. */
+  .dash-hero__glow {
+    width: 280px;
+    height: 280px;
   }
 }
 @media (max-width: 640px) {
@@ -281,8 +300,45 @@
     flex-direction: column;
   }
 }
+@media (max-width: 560px) {
+  .dash-page {
+    gap: 1rem;
+  }
+  .dash-stats {
+    gap: 0.85rem;
+  }
+  .dash-tools {
+    gap: 0.85rem;
+  }
+  /* Buttons/links in section heads should be comfortable touch targets. */
+  .dash-tool {
+    gap: 0.85rem;
+  }
+}
 @media (max-width: 420px) {
   .dash-stats {
     grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 400px) {
+  .dash-page {
+    gap: 0.85rem;
+  }
+  .dash-recent__row {
+    gap: 0.6rem;
+    padding: 0.6rem;
+    flex-wrap: wrap;
+  }
+  .dash-meds__row {
+    gap: 0.5rem 0.6rem;
+    padding: 0.55rem 0.6rem;
+    flex-wrap: wrap;
+  }
+  .dash-recent__emoji {
+    font-size: 1.4rem;
+  }
+  .dash-tool__icon {
+    width: 42px;
+    height: 42px;
   }
 }

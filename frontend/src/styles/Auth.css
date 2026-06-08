@@ -26,7 +26,8 @@
   animation: gradientShift 14s var(--ease) infinite;
   color: #fff;
   display: flex; align-items: center;
-  padding: 3rem;
+  padding: clamp(1.75rem, 1rem + 3vw, 3rem);
+  min-width: 0;
 }
 .auth-showcase__inner { position: relative; z-index: 2; max-width: 460px; margin: 0 auto; }
 .auth-showcase__title { font-size: clamp(1.9rem, 1.4rem + 1.8vw, 2.7rem); line-height: 1.15; margin-bottom: 1rem; }
@@ -39,6 +40,7 @@
 
 .auth-highlights { list-style: none; display: flex; flex-direction: column; gap: 1.1rem; }
 .auth-highlights li { display: flex; gap: 0.9rem; align-items: flex-start; }
+.auth-highlights li > div { min-width: 0; }
 .auth-highlights__icon {
   width: 42px; height: 42px; flex-shrink: 0; border-radius: 12px;
   background: rgba(255,255,255,0.16); display: grid; place-items: center; backdrop-filter: blur(4px);
@@ -51,10 +53,11 @@
 .auth-showcase__orb--2 { width: 260px; height: 260px; background: #2dd4bf; bottom: -80px; left: -40px; animation: float 11s ease-in-out infinite reverse; }
 
 /* ---- Form panel ---- */
-.auth-panel { display: flex; align-items: center; justify-content: center; padding: 2rem 1.5rem; }
+.auth-panel { display: flex; align-items: center; justify-content: center; padding: 2rem 1.5rem; min-width: 0; }
 .auth-card { width: 100%; max-width: 420px; }
+.auth-card img, .auth-card svg { max-width: 100%; }
 .auth-card__head { margin-bottom: 1.8rem; }
-.auth-card__head h1 { font-size: 1.9rem; color: var(--text); margin-bottom: 0.4rem; }
+.auth-card__head h1 { font-size: clamp(1.5rem, 1.2rem + 1.6vw, 1.9rem); color: var(--text); margin-bottom: 0.4rem; }
 .auth-card__head p { color: var(--text-muted); }
 .auth-card__foot { margin-top: 1.6rem; text-align: center; color: var(--text-muted); font-size: var(--fs-sm); display: flex; flex-direction: column; gap: 0.5rem; }
 .auth-card__foot a { color: var(--primary); font-weight: 700; }
@@ -88,10 +91,26 @@
   .auth-brand--mobile { display: inline-flex; }
 }
 
+/* ---- Tablet portrait: trim panel padding ---- */
+@media (max-width: 768px) {
+  .auth-panel { padding: 2rem 1.25rem; }
+}
+
+/* ---- Large phone: roomier touch targets + tighter padding ---- */
+@media (max-width: 560px) {
+  .auth-panel { padding: 1.75rem 1rem; }
+  .auth-card__head { margin-bottom: 1.4rem; }
+  /* Ensure interactive controls stay finger-friendly */
+  .auth-form button,
+  .auth-form a,
+  .auth-theme-toggle { min-height: 42px; }
+}
+
 /* ---- Mobile: roomier panel + fluid heading on small phones ---- */
-@media (max-width: 420px) {
-  .auth-panel { padding: 1.5rem 1rem; }
-  .auth-card__head h1 { font-size: clamp(1.5rem, 1.2rem + 2vw, 1.9rem); }
+@media (max-width: 400px) {
+  .auth-panel { padding: 1.5rem 0.75rem; }
+  .auth-card__head h1 { font-size: clamp(1.4rem, 1.1rem + 2.4vw, 1.7rem); }
+  .auth-success-box__icon { width: 60px; height: 60px; }
 }
 
 /* ---- Guest entry (Continue as guest) ---- */

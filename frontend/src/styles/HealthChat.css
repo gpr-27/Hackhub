@@ -15,10 +15,12 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.4rem 0.9rem;
+  min-width: 0;
 }
 .hc-mode-blurb {
   font-size: var(--fs-sm);
   color: var(--text-subtle);
+  min-width: 0;
 }
 
 /* ---- Model selector (options populated from config) ---- */
@@ -576,5 +578,35 @@ ol.hc-bubble-list { list-style: decimal; }
 .hc-crisis__body p { overflow-wrap: break-word; }
 @media (max-width: 560px) {
   .hc-model { margin-left: 0; width: 100%; }
-  .hc-model__select { flex: 1; }
+  .hc-model__select { flex: 1; min-width: 0; }
+  .hc-mode-blurb { width: 100%; }
+
+  /* Tighten chat padding so bubbles get more room on phones. */
+  .hc-stream { padding: 1rem 0.85rem 0.5rem; }
+  .hc-composer { padding: 0.7rem 0.75rem 0.35rem; gap: 0.45rem; }
+  .hc-foot { padding: 0.2rem 0.75rem 0.6rem; }
+  .hc-bubble { max-width: 90%; }
+
+  /* Jump-to-bottom pill clears the composer regardless of input height. */
+  .hc-jump { bottom: 6.6rem; }
+
+  /* Keep touch targets comfortable. */
+  .hc-chip { padding: 0.55rem 0.95rem; }
+  .hc-model__select { padding: 0.5rem 0.6rem; }
+}
+
+@media (max-width: 400px) {
+  /* Smallest phones: maximise usable width, keep everything reachable. */
+  .hc-stream { padding: 0.85rem 0.6rem 0.45rem; }
+  .hc-composer { padding: 0.6rem 0.6rem 0.3rem; }
+  .hc-foot { padding: 0.2rem 0.6rem 0.55rem; }
+  .hc-bubble { max-width: 92%; }
+  .hc-list { gap: 0.7rem; }
+
+  /* Slightly smaller avatar/send keeps the composer one comfortable row. */
+  .hc-send { width: 44px; height: 44px; }
+  .hc-input { min-height: 44px; }
+
+  /* Sessions drawer takes nearly the full screen on tiny widths. */
+  .hc-sessions { width: 88vw; max-width: 88vw; }
 }

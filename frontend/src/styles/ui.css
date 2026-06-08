@@ -3,6 +3,22 @@
    Global; imported once via index.css.
    ============================================================================ */
 
+/* ---- Global responsive safety net --------------------------------------
+   theme.css already sets box-sizing on `*`, `overflow-x: clip` on body and
+   `img { max-width: 100% }`. Add only what is missing here so the foundation
+   is complete without duplicating those rules. */
+*::before,
+*::after { box-sizing: border-box; }
+
+/* Replaced/embedded media never forces horizontal overflow. height:auto is
+   intentionally NOT applied so fixed-size SVG icons (e.g. lucide width/height)
+   keep their intrinsic aspect ratio. */
+svg,
+video,
+canvas { max-width: 100%; }
+video,
+canvas { height: auto; }
+
 /* ---- Button ---- */
 .ui-btn {
   display: inline-flex;
@@ -155,7 +171,7 @@
 
 /* ---- Page header ---- */
 .ui-pagehead { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.6rem; }
-.ui-pagehead__titles { display: flex; flex-direction: column; gap: 0.3rem; }
+.ui-pagehead__titles { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; flex: 1 1 16rem; }
 .ui-pagehead__eyebrow { font-size: var(--fs-xs); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--primary); }
 .ui-pagehead__title { font-size: var(--fs-2xl); color: var(--text); }
 .ui-pagehead__subtitle { color: var(--text-muted); font-size: var(--fs-md); max-width: 60ch; }
@@ -168,16 +184,16 @@
   animation: fadeIn var(--dur) var(--ease);
 }
 .ui-modal {
-  width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto;
+  width: 100%; max-width: min(540px, 100% - 2rem); max-height: min(90vh, 100% - 2rem); overflow-y: auto;
   background: var(--surface-solid); border: 1px solid var(--border);
   border-radius: var(--radius-lg); box-shadow: var(--shadow-xl);
   animation: popIn var(--dur) var(--ease-spring);
 }
-.ui-modal--sm { max-width: 420px; }
-.ui-modal--lg { max-width: 760px; }
+.ui-modal--sm { max-width: min(420px, 100% - 2rem); }
+.ui-modal--lg { max-width: min(760px, 100% - 2rem); }
 .ui-modal__head { display: flex; align-items: center; justify-content: space-between; gap: 1rem;
   padding: 1.3rem 1.5rem; border-bottom: 1px solid var(--border); }
-.ui-modal__title { font-size: var(--fs-lg); color: var(--text); }
+.ui-modal__title { font-size: var(--fs-lg); color: var(--text); min-width: 0; overflow-wrap: anywhere; }
 .ui-modal__close { color: var(--text-subtle); padding: 0.4rem; border-radius: var(--radius-xs); display: flex; transition: all var(--dur) var(--ease); }
 .ui-modal__close:hover { background: var(--surface-2); color: var(--text); }
 .ui-modal__body { padding: 1.5rem; }
@@ -217,7 +233,9 @@
 
 /* ---- Misc layout helpers reused across pages ---- */
 .ui-grid { display: grid; gap: 1.2rem; }
-.ui-row { display: flex; gap: 0.7rem; align-items: center; }
+.ui-grid > * { min-width: 0; }
+.ui-row { display: flex; gap: 0.7rem; align-items: center; flex-wrap: wrap; }
+.ui-row > * { min-width: 0; }
 .ui-divider { height: 1px; background: var(--border); border: none; margin: 1rem 0; }
 .ui-chip {
   display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.4rem 0.8rem;
@@ -249,4 +267,40 @@
   .ui-modal__foot .ui-btn { width: 100%; }
   /* Stat cards stack icon over content so they never crowd. */
   .ui-stat { flex-direction: column; align-items: flex-start; gap: 0.7rem; padding: 1.1rem 1.2rem; }
+}
+
+/* Tablet portrait: page-header actions move below the titles and span the
+   row so they don't get crushed against the title block. */
+@media (max-width: 768px) {
+  .ui-pagehead { gap: 0.85rem; }
+  .ui-pagehead__actions { flex: 1 1 100%; }
+}
+
+/* Large phones: trim component padding, guarantee ≥40px touch targets and
+   keep flex rows wrapping cleanly. */
+@media (max-width: 560px) {
+  .ui-card--pad { padding: 1.15rem; }
+  .ui-stat { padding: 1.05rem 1.1rem; }
+  /* Touch targets: every interactive control renders comfortably tappable. */
+  .ui-btn { min-height: 40px; }
+  .ui-btn--sm { min-height: 38px; }
+  .ui-input, .ui-textarea, .ui-select { min-height: 44px; }
+  .ui-segment__btn { min-height: 38px; }
+  .ui-chip { min-height: 38px; }
+  /* Page-header actions stretch their buttons so they're easy to hit. */
+  .ui-pagehead__actions { width: 100%; }
+  .ui-pagehead__actions > .ui-btn { flex: 1 1 auto; }
+}
+
+/* Small phones (≈320–400px): tightest padding, scale the big stat figure
+   down so it never forces the card wider. */
+@media (max-width: 400px) {
+  .ui-card--pad { padding: 0.85rem; }
+  .ui-stat { padding: 0.9rem; }
+  .ui-stat__value { font-size: 1.45rem; }
+  .ui-modal__head { padding: 0.85rem 0.9rem; }
+  .ui-modal__body { padding: 0.9rem; }
+  .ui-modal__foot { padding: 0.85rem 0.9rem; }
+  .ui-empty { padding: 2rem 1rem; }
+  .ui-loader { padding: 2rem 0.75rem; }
 }

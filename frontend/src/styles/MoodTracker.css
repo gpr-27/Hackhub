@@ -25,6 +25,12 @@
   .mt-layout { grid-template-columns: 1fr; }
 }
 
+@media (max-width: 768px) {
+  .mt-page { gap: 1.25rem; }
+  .mt-layout { gap: 1.25rem; }
+  .mt-insights { gap: 1.25rem; }
+}
+
 /* ---- Shared typographic bits ---- */
 .mt-h2 {
   display: flex;
@@ -96,8 +102,17 @@
   grid-template-columns: repeat(5, 1fr);
   gap: 0.6rem;
 }
-@media (max-width: 380px) {
-  .mt-moods { gap: 0.4rem; }
+@media (max-width: 560px) {
+  .mt-moods { gap: 0.45rem; }
+  .mt-mood { padding: 0.6rem 0.2rem 0.45rem; }
+  .mt-mood__emoji { font-size: 1.5rem; }
+}
+@media (max-width: 400px) {
+  .mt-moods {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.4rem;
+  }
+  .mt-mood__emoji { font-size: 1.4rem; }
 }
 
 .mt-mood {
@@ -447,6 +462,38 @@
 }
 
 /* ---- Mobile responsiveness ---- */
+@media (max-width: 560px) {
+  /* Roomier touch targets for phones (>=40px tall). */
+  .mt-chip {
+    padding: 0.55rem 0.9rem;
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+  }
+  .mt-icon-btn {
+    width: 40px;
+    height: 40px;
+  }
+  /* Tighter card-inset blocks so text doesn't get cramped. */
+  .mt-tl-item {
+    gap: 0.7rem;
+    padding: 0.85rem;
+  }
+  .mt-reflection { padding: 0.9rem 0.95rem; }
+  .mt-mood-readout { flex-wrap: wrap; }
+}
+
 @media (max-width: 480px) {
   .mt-stats { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 400px) {
+  /* Let the headline badges and actions stack without overflow. */
+  .mt-tl-top { flex-wrap: wrap; }
+  .mt-tl-actions { margin-left: auto; }
+  .mt-tl-emoji {
+    width: 40px;
+    height: 40px;
+    font-size: 1.35rem;
+  }
 }
