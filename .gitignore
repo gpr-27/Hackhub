@@ -13,9 +13,11 @@ dist/
 .env.*.local
 **/.env
 **/.env.local
-# Local secrets sheet you paste into Render's Blueprint prompts — never commit.
+# Local secrets sheet (never commit)
 render-upload.env
 
+# Interview documentation / preparation (local only)
+interview/
 # Logs
 *.log
 npm-debug.log*

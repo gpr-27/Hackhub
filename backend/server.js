@@ -16,19 +16,32 @@ const SHUTDOWN_TIMEOUT_MS = 10000;
 
 const start = async () => {
   logger.info(`[startup] booting backend (env: ${config.nodeEnv})`);
-  await connectDatabase();
 
   const app = createApp();
-  return new Promise((resolve) => {
-    const server = app.listen(config.port, () => {
-      config.logStartupConfig({ dbConnected: true });
+  const server = await new Promise((resolve) => {
+    const s = app.listen(config.port, () => {
+      config.logStartupConfig({ dbConnected: false });
       logger.info(`[startup] server listening on port ${config.port}`);
       if (!config.groq.isConfigured) {
         logger.warn('[startup] GROQ_API_KEY not configured — AI replies use built-in fallbacks.');
       }
-      resolve(server);
+      resolve(s);
     });
   });
+
+  // Attempt database connection without blocking startup or crashing the server.
+  // If unavailable at boot, background retries will continue connecting.
+  connectDatabase()
+    .then(() => {
+      logger.info('[startup] database connected successfully');
+    })
+    .catch((err) => {
+      logger.warn(
+        `[startup] database initial connection failed: ${err.message}. Server is running; retrying in background...`
+      );
+    });
+
+  return server;
 };
 
 // Wires process-level lifecycle handlers to an already-listening server. Called

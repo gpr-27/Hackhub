@@ -28,4 +28,17 @@ describe('Health & readiness probes', () => {
     expect(res.body.ready).toBe(true);
     expect(res.body.db.readyState).toBe(1);
   });
+
+  test('GET /api/health returns 200 even when database is disconnected', async () => {
+    const mongoose = require('mongoose');
+    await mongoose.disconnect();
+    const res = await request(app).get('/api/health');
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('ok');
+    expect(res.body.db.readyState).toBe(0);
+    expect(res.body.db.status).toBe('disconnected');
+    // Reconnect for afterAll cleanup
+    await mongoose.connect(process.env.MONGO_URI);
+  });
 });
+
