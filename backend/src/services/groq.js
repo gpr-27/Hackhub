@@ -132,15 +132,11 @@ Try one small kind act for yourself today — a short walk, water, or a slow bre
 You're showing real strength by checking in with yourself. Keep going.`;
 };
 
-// Calls the provider chat-completions endpoint and returns the assistant text.
-// The model is resolved against the configured allow-list (AVAILABLE_MODELS);
-// no model identifier is ever hardcoded here.
-const callGroq = async (messages, { maxTokens = 600, temperature = 0.7, model } = {}) => {
-  const resolvedModel = config.resolveModel(model);
-  if (model && model !== resolvedModel) {
-    logger.warn(`[llm] requested model "${model}" is not allow-listed; using "${resolvedModel}"`);
-  }
-
+// One chat-completions request against a single model. Throws on any failure
+// (network, timeout, non-2xx, empty reply) so the caller can try the next model.
+// Reasoning models spend part of max_tokens on hidden reasoning, so an empty
+// `content` (finish_reason "length") is treated as a failure, not a reply.
+const requestModel = async (resolvedModel, messages, { maxTokens, temperature }) => {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   const url = `${config.groq.baseUrl}/chat/completions`;
@@ -166,7 +162,6 @@ const callGroq = async (messages, { maxTokens = 600, temperature = 0.7, model } 
 
     if (!response.ok) {
       const detail = await response.text();
-      logger.error(`[llm] provider error ${response.status} for model ${resolvedModel}`);
       throw new Error(`Provider API error ${response.status}: ${detail.slice(0, 200)}`);
     }
 
@@ -176,10 +171,45 @@ const callGroq = async (messages, { maxTokens = 600, temperature = 0.7, model } 
       throw new Error('Provider API returned an empty response');
     }
     logger.debug(`[llm] response ← model=${resolvedModel} chars=${text.length}`);
-    return { text, model: resolvedModel };
+    return text;
   } finally {
     clearTimeout(timeout);
   }
+};
+
+// The ordered, de-duplicated list of models to try: the requested model
+// (allow-listed via AVAILABLE_MODELS, else DEFAULT_MODEL), then FALLBACK_MODEL,
+// then DEFAULT_MODEL — so the fallback also covers a user who picked the
+// fallback model themselves. No model identifier is ever hardcoded here.
+const buildModelChain = (requested) => {
+  const primary = config.resolveModel(requested);
+  if (requested && requested !== primary) {
+    logger.warn(`[llm] requested model "${requested}" is not allow-listed; using "${primary}"`);
+  }
+  return [...new Set([primary, config.llm.fallbackModel, config.llm.defaultModel].filter(Boolean))];
+};
+
+// Calls the provider, falling back through the model chain on failure.
+// Returns the assistant text and the model that actually produced it.
+const callGroq = async (messages, { maxTokens = 1024, temperature = 0.7, model } = {}) => {
+  const chain = buildModelChain(model);
+  let lastError;
+
+  for (const candidate of chain) {
+    try {
+      const text = await requestModel(candidate, messages, { maxTokens, temperature });
+      return { text, model: candidate };
+    } catch (err) {
+      lastError = err;
+      const reason = err.name === 'AbortError' ? 'request timed out' : err.message;
+      const next = chain[chain.indexOf(candidate) + 1];
+      logger.warn(
+        `[llm] model "${candidate}" failed (${reason})` +
+          (next ? `; falling back to "${next}"` : '; no more models to try')
+      );
+    }
+  }
+  throw lastError;
 };
 
 // Generates a chat reply. Never throws — returns a fallback on any failure.
@@ -203,7 +233,7 @@ const generateMoodInsights = async (moodData, model) => {
   }
   try {
     const { text, model: usedModel } = await callGroq(buildMoodMessages(moodData), {
-      maxTokens: 400,
+      maxTokens: 800,
       model,
     });
     return { text, fallback: false, model: usedModel };
@@ -217,5 +247,5 @@ module.exports = {
   generateChatReply,
   generateMoodInsights,
   // Exposed for unit tests.
-  _internal: { buildChatMessages, buildMoodMessages, fallbackChat, fallbackMood },
+  _internal: { buildChatMessages, buildMoodMessages, fallbackChat, fallbackMood, buildModelChain },
 };

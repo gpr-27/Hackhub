@@ -130,7 +130,10 @@ keeps working without errors. The provider and models are configured entirely vi
 the environment — `LLM_PROVIDER`, `DEFAULT_MODEL` and the `AVAILABLE_MODELS` list
 (mirrored on the frontend by `VITE_AVAILABLE_MODELS`, which populates the in-app
 model selector). No model or provider names are hardcoded in the source, and the
-chosen model is validated server-side against `AVAILABLE_MODELS`.
+chosen model is validated server-side against `AVAILABLE_MODELS`. If a request to
+the selected model fails (rate limit, outage, timeout, empty reply), the backend
+automatically retries on `FALLBACK_MODEL` (optional); only if every model fails
+does the chat return the built-in canned guidance.
 
 ## Deployment
 

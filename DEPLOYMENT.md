@@ -59,6 +59,7 @@ Set in `render.yaml` (edit there to change defaults):
 | `LLM_PROVIDER` | blueprint | `groq` |
 | `GROQ_BASE_URL` | blueprint | `https://api.groq.com/openai/v1` |
 | `DEFAULT_MODEL` | blueprint | must be one of `AVAILABLE_MODELS` |
+| `FALLBACK_MODEL` | blueprint | optional; tried automatically if the selected model fails |
 | `AVAILABLE_MODELS` | blueprint | `id` or `id:Label`, comma-separated |
 | `MONGODB_URI` | **you** (`sync: false`) | Atlas connection string |
 | `CLERK_SECRET_KEY` | **you** (`sync: false`) | `sk_…` |
@@ -86,8 +87,8 @@ but pass your own to exercise the real frontend:
 # Build (override the public VITE_* values via build args as needed)
 docker build -t aura \
   --build-arg CLERK_PUBLISHABLE_KEY="pk_…" \
-  --build-arg DEFAULT_MODEL="llama-3.3-70b-versatile" \
-  --build-arg AVAILABLE_MODELS="llama-3.3-70b-versatile:Llama 3.3 70B" .
+  --build-arg DEFAULT_MODEL="openai/gpt-oss-20b" \
+  --build-arg AVAILABLE_MODELS="openai/gpt-oss-20b:GPT-OSS 20B,openai/gpt-oss-120b:GPT-OSS 120B" .
 
 # Run (runtime secrets + PORT come from your root .env)
 docker run --rm -p 3001:3001 --env-file .env aura

@@ -27,4 +27,5 @@ set('LOG_LEVEL', 'error');
 set('LLM_PROVIDER', 'groq');
 set('GROQ_BASE_URL', 'https://api.groq.com/openai/v1');
 set('DEFAULT_MODEL', 'test-model-a');
+set('FALLBACK_MODEL', 'test-model-b');
 set('AVAILABLE_MODELS', 'test-model-a:Test Model A,test-model-b:Test Model B');

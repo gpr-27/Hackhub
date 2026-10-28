@@ -159,6 +159,9 @@ if (availableModelsRaw && availableModels.length === 0) {
 if (defaultModel && availableModelIds.length && !availableModelIds.includes(defaultModel)) {
   errors.push(`DEFAULT_MODEL "${defaultModel}" is not present in AVAILABLE_MODELS`);
 }
+// OPTIONAL: model tried automatically when a request to the selected model fails
+// (rate limit, outage, timeout, empty reply). Unset -> no fallback model.
+const fallbackModel = String(env.FALLBACK_MODEL || '').trim();
 
 // GROQ_API_KEY is required only in production. In development/test the AI layer
 // degrades to safe, built-in fallback replies (a documented product feature
@@ -264,6 +267,7 @@ const config = {
   llm: {
     provider: llmProvider,
     defaultModel,
+    fallbackModel, // '' when not configured
     availableModels, // [{ id, label }]
     availableModelIds, // [id]
   },
@@ -295,6 +299,7 @@ const logStartupConfig = ({ dbConnected = false } = {}) => {
   console.log(`LOG_LEVEL=${logLevel}`);
   console.log(`LLM_PROVIDER=${llmProvider}`);
   console.log(`DEFAULT_MODEL=${defaultModel}`);
+  console.log(`FALLBACK_MODEL=${fallbackModel || '(none)'}`);
   console.log(`AVAILABLE_MODELS=${availableModels.length}`);
   if (dbConnected) console.log('MongoDB Connected ✓');
   const providerLabel = llmProvider.charAt(0).toUpperCase() + llmProvider.slice(1);
